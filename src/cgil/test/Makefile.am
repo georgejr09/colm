@@ -3,9 +3,11 @@ bin_PROGRAMS = \
 	cgil-go cgil-java cgil-js cgil-julia \
 	cgil-ocaml cgil-ruby cgil-rust
 
-check_SCRIPTS = subject.mk subject.sh
+check_SCRIPTS = subject.mk subject.sh runtests
 
 pkgdata_SCRIPTS = runtests
+
+TESTS = runtests
 
 EXTRA_DIST = runtests.in cases
 
