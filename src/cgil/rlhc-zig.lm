@@ -1,11 +1,7 @@
 include 'ril.lm'
 
-#
-# Zig output relexer. Used only to re-indent the generated text by brace
-# depth. Note that Zig has no block comments, only line comments, and it
-# uses '\\' to introduce multiline string lines.
-#
-namespace out_zig
+# Zig multiline strings with '\\' require special handling.
+namespace zig_out
 	token _IN_ /''/
 	token _EX_ /''/
 
@@ -51,86 +47,41 @@ namespace out_zig
 	|	[string]
 	|	[`{ _IN_ item* _EX_ `} ]
 
-	def out_zig
+	def zig_out
 		[_IN_ _EX_ item*]
 end
 
 
 namespace zig_gen
 
-	global _: parser<out_zig::out_zig>
+	global _: parser<zig_out::zig_out>
 
-	#
-	# Zig has no goto. Ragel's goto backends emit a flat list of sibling
-	# labels with forward and backward jumps between them. We lower each
-	# such statement list into a labeled switch:
-	#
-	#     _sw0: switch ( @as( u32, 0 ) ) {
-	#         0 => { <stmts before first label> continue :_sw0 1; },
-	#         1 => { <stmts of label 1>        continue :_sw0 2; },
-	#         ...
-	#         else => unreachable,
-	#     }
-	#
-	# and every 'goto L' becomes 'continue :_sw0 <id of L>'. A compile-time
-	# known continue target is an unconditional jump straight to the prong;
-	# a runtime one gets its own dispatch at that site, which is what gives
-	# direct-threaded (computed goto) codegen.
-	#
-	# LabelSw maps a label name to the switch it lives in, LabelId maps it
-	# to its prong number within that switch.
-	#
+	# Lower goto to labeled switch: 'goto L' becomes 'continue :_sw<n> <id>'.
+	# LabelSw: label -> switch name. LabelId: label -> prong. Scoped by nesting depth.
 	global LabelSw: map<str, str> = new map<str, str>()
 	global LabelId: map<str, int> = new map<str, int>()
 	global SwCount: int = 0
 
-	#
-	# Number the labels directly contained in one statement list. Returns
-	# true if this level held any labels at all.
-	#
-	bool number_level( StmtList: stmt* )
+	# Claim labels for this level. insert() keeps first binding, so displace old.
+	str number_level( StmtList: stmt* )
 	{
-		Any: bool = false
-		for Stmt: stmt in repeat( StmtList ) {
-			if match Stmt [goto_label]
-				Any = true
-		}
-
-		if ( !Any )
-			return false
-
-		SwName: str = "_sw[SwCount]"
-		SwCount = SwCount + 1
-
+		SwName: str
 		N: int = 1
 		for Stmt: stmt in repeat( StmtList ) {
 			if match Stmt [L: goto_label] {
+				if ( !SwName ) {
+					SwName = "_sw[SwCount]"
+					SwCount = SwCount + 1
+				}
 				Name: str = $L.ident
+				LabelSw->remove( Name )
+				LabelId->remove( Name )
 				LabelSw->insert( Name, SwName )
 				LabelId->insert( Name, N )
 				N = N + 1
 			}
 		}
-		return true
-	}
-
-	#
-	# Walk every construct that can directly hold a statement list and
-	# number the labels found at that level.
-	#
-	void number_labels( Start: start )
-	{
-		number_level( Start._repeat_stmt )
-		for B: block in Start
-			number_level( B.StmtList )
-		for S: switch_stmt in Start
-			number_level( S._repeat_stmt )
-		for C: case_block in Start
-			number_level( C._repeat_stmt )
-		for D: default_block in Start
-			number_level( D._repeat_stmt )
-		for P: pat_block in Start
-			number_level( P._repeat_stmt )
+		return SwName
 	}
 
 	void tok_list( TL: host::tok* )
@@ -421,15 +372,14 @@ namespace zig_gen
 		}
 	}
 
-	#
-	# Zig rejects unreachable code outright, while C happily accepts it and
-	# Ragel does emit some (the start state action trails an unconditional
-	# goto, for one). Anything following an unconditional transfer in the
-	# same statement list has to be dropped.
-	#
+	# Zig rejects unreachable code; drop stmts after goto/break/continue.
 	bool is_transfer( Stmt: stmt )
 	{
 		if match Stmt [goto_stmt]
+			return true
+		if match Stmt [break_stmt]
+			return true
+		if match Stmt [continue_stmt]
 			return true
 		return false
 	}
@@ -443,11 +393,7 @@ namespace zig_gen
 			stmt( Stmt )
 	}
 
-	#
-	# Emit the body of a switch. RIL uses flat C-style 'case N:' labels
-	# with the arm's statements following, which we have to group into Zig
-	# prongs. Ragel's goto backends never rely on fallthrough.
-	#
+	# Transform flat C-style cases into Zig prongs (no fallthrough).
 	void switch_body( StmtList: stmt* )
 	{
 		Open: bool = false
@@ -507,10 +453,6 @@ namespace zig_gen
 		case [V: static_value] {
 			<<	"const [V.ident]: [type(V.type)] = [V.number];
 		}
-		case [ES: export_stmt]
-		{
-			<<	"pub const [ES.ident] = [number(ES.number)];
-		}
 		case [D: declaration]
 		{
 			# Declarations at a labelled level are hoisted by stmt_list;
@@ -520,6 +462,10 @@ namespace zig_gen
 		case [Index: index_stmt]
 		{
 			decl_out( Index.ident, 'i32', Index.opt_init )
+		}
+		case [ES: export_stmt]
+		{
+			<<	"pub const [ES.ident] = [number(ES.number)];
 		}
 		case [
 				'if' `( IfExpr: expr `) IfStmt: stmt
@@ -601,15 +547,13 @@ namespace zig_gen
 			<<	"[lvalue(AS.LValue) AS.assign_op expr(AS.expr)];
 		}
 		default {
+			# catches unspecified cases
 			<<	"[Stmt]
 		}
 	}
 
-	#
-	# A Zig 'var' that is never mutated, and any unused local, are compile
-	# errors. Discarding the address counts as both a use and a possible
-	# mutation, and does not survive into the optimised code.
-	#
+	# A 'var' never mutated, and any unused local, are compile errors.
+	# Discarding the address counts as both and does not survive optimisation.
 	void decl_out( Ident: ident, Ty: str, Init: opt_init )
 	{
 		<<	"var [Ident]: [Ty] = "
@@ -620,31 +564,21 @@ namespace zig_gen
 		<<	"_ = &[Ident];
 	}
 
+	# decl_out's no-init path, for hoisting out of a labeled level.
 	void hoist_decl( Ident: ident, Ty: str )
 	{
 		<<	"var [Ident]: [Ty] = 0;
 			"_ = &[Ident];
 	}
 
-	#
-	# Emit one statement list. If it directly contains labels the whole
-	# level becomes a labeled switch, with declarations hoisted out ahead
-	# of it (prongs are separate scopes) and their initialisers left
-	# behind as assignments so evaluation order is preserved.
-	#
+	# A level holding labels becomes a labeled switch. Declarations hoist out
+	# ahead of it, since prongs are separate scopes, leaving their
+	# initialisers behind as assignments to preserve evaluation order.
 	void stmt_list( StmtList: stmt* )
 	{
-		HasLabels: bool = false
-		FirstLabel: str
-		for Stmt: stmt in repeat( StmtList ) {
-			if match Stmt [L: goto_label] {
-				if ( !HasLabels )
-					FirstLabel = $L.ident
-				HasLabels = true
-			}
-		}
+		SwName: str = number_level( StmtList )
 
-		if ( !HasLabels ) {
+		if ( !SwName ) {
 			Dead: bool = false
 			for Stmt: stmt in repeat( StmtList ) {
 				if ( !Dead ) {
@@ -654,8 +588,6 @@ namespace zig_gen
 			}
 		}
 		else {
-			SwName: str = LabelSw->find( FirstLabel )
-
 			for Stmt: stmt in repeat( StmtList ) {
 				if match Stmt [D: declaration]
 					hoist_decl( D.ident, type_str(D.type) )
@@ -667,9 +599,12 @@ namespace zig_gen
 				"0 => {
 
 			Dead: bool = false
+			Id: int = 0
 			for Stmt: stmt in repeat( StmtList ) {
-				if match Stmt [L: goto_label] {
-					Id: int = LabelId->find( $L.ident )
+				if match Stmt [goto_label] {
+					# Prongs run in declaration order, matching the numbering
+					# number_level handed out.
+					Id = Id + 1
 					# Fall through into the next prong, unless control
 					# already left this one.
 					if ( !Dead )
@@ -703,18 +638,16 @@ namespace zig_gen
 
 	void trans( Output: stream, Start: start )
 	{
-		_ = new parser<out_zig::out_zig>()
+		_ = new parser<zig_out::zig_out>()
 		Input: _input = _->gets()
 		Input->auto_trim(true)
 
 		if ( Start.opt_bom.bom )
 			send Output [Start.opt_bom.bom]
 
-		number_labels( Start )
-
 		stmt_list( Start._repeat_stmt )
 
-		ZO: out_zig::out_zig = _->finish()
+		ZO: zig_out::zig_out = _->finish()
 
 		if ZO {
 			send Output
