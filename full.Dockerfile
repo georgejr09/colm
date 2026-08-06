@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 	git libtool autoconf automake g++ gcc make \
 	wget clang gnupg gdc default-jdk \
 	ruby mono-mcs golang ocaml rustc julia \
+	curl xz-utils \
 	gnustep-make python2 python-is-python2 \
 	libpcre3-dev libgnustep-base-dev
 
