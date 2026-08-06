@@ -72,7 +72,7 @@ TRANS_DEPS = \
 	trans-d.lm trans-go.lm \
 	trans-java.lm trans-julia.lm \
 	trans-ocaml.lm trans-ruby.lm \
-	trans-rust.lm
+	trans-rust.lm trans-zig.lm
 
 trans_CPPFLAGS = $(COLM_xCPPFLAGS)
 trans_SOURCES = trans.c main.c
