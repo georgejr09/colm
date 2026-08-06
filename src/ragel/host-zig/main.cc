@@ -37,14 +37,14 @@ const char *defaultOutFnZig( const char *inputFileName )
 
 HostType hostTypesZig[] =
 {
-	{ "u8",    0,  "uint8",   false,  true,  false,  0, 0,                    U8BIT_MIN,  U8BIT_MAX,   1 },
-	{ "i8",    0,  "int8",    true,   true,  false,  S8BIT_MIN,  S8BIT_MAX,   0, 0,                    1 },
-	{ "u16",   0,  "uint16",  false,  true,  false,  0, 0,                    U16BIT_MIN, U16BIT_MAX,  2 },
-	{ "i16",   0,  "int16",   true,   true,  false,  S16BIT_MIN, S16BIT_MAX,  0, 0,                    2 },
-	{ "u32",   0,  "uint32",  false,  true,  false,  0, 0,                    U32BIT_MIN, U32BIT_MAX,  4 },
-	{ "i32",   0,  "int32",   true,   true,  false,  S32BIT_MIN, S32BIT_MAX,  0, 0,                    4 },
-	{ "u64",   0,  "uint64",  false,  true,  false,  0, 0,                    U64BIT_MIN, U64BIT_MAX,  8 },
-	{ "i64",   0,  "int64",   true,   true,  false,  S64BIT_MIN, S64BIT_MAX,  0, 0,                    8 },
+	{ "u8",  0, "uint8",  false, true, false, 0, 0,                  U8BIT_MIN,  U8BIT_MAX,  1 },
+	{ "i8",  0, "int8",   true,  true, false, S8BIT_MIN,  S8BIT_MAX,  0, 0,                  1 },
+	{ "u16", 0, "uint16", false, true, false, 0, 0,                  U16BIT_MIN, U16BIT_MAX, 2 },
+	{ "i16", 0, "int16",  true,  true, false, S16BIT_MIN, S16BIT_MAX, 0, 0,                  2 },
+	{ "u32", 0, "uint32", false, true, false, 0, 0,                  U32BIT_MIN, U32BIT_MAX, 4 },
+	{ "i32", 0, "int32",  true,  true, false, S32BIT_MIN, S32BIT_MAX, 0, 0,                  4 },
+	{ "u64", 0, "uint64", false, true, false, 0, 0,                  U64BIT_MIN, U64BIT_MAX, 8 },
+	{ "i64", 0, "int64",  true,  true, false, S64BIT_MIN, S64BIT_MAX, 0, 0,                  8 },
 };
 
 /* Zig uses labeled switch for goto emulation. Supports -G0/-G1/-G2 styles. */
