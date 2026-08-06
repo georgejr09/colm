@@ -28,11 +28,11 @@ int factor( Factor: indep::factor )
 	}
 	elsif match Factor ['true']
 	{
-		send Out 'true'
+		send Out '1'
 	}
 	elsif match Factor ['false']
 	{
-		send Out 'false'
+		send Out '0'
 	}
 	elsif match Factor [`buffer]
 	{
@@ -59,7 +59,7 @@ void type( Type: indep::type )
 	}
 	case [`bool]
 	{
-		send Out "bool"
+		send Out "i32"
 	}
 	case [`char]
 	{
@@ -115,8 +115,6 @@ void array_init( Size: int, Zero: str )
 int var_decl( VarDecl: indep::var_decl )
 {
 	Zero: str = '0'
-	if match VarDecl.type [`bool]
-		Zero = 'false'
 
 	if VarDecl.opt_arr.expr {
 		send Out
@@ -173,7 +171,7 @@ int print_stmt( Stmt: indep::print_stmt )
 		send Out
 			"_out( \"{d}\", .{ [expr(Stmt.expr)] } );
 	}
-	case [`print_buf `;]
+	case [`print_buf E1: expr `, E2: expr `;]
 	{
 		send Out
 			"_out( \"{s}\", .{ buffer\[0..blen\] } );
@@ -309,7 +307,7 @@ void zig( Output: stream )
 
 	send Output
 		"
-		"[Section]
+		"[@Section]
 		"
 		"%% write data;
 		"
@@ -322,14 +320,9 @@ void zig( Output: stream )
 		"	var cs: i32 = 0;
 		"	var buffer: \[1024\]u8 = undefined;
 		"	var blen: usize = 0;
-		"	var nfa_len: i32 = 0;
-		"	var nfa_count: i32 = 0;
-		"	var nfa_bp_state: \[20\]i32 = .{ 0 } ** 20;
-		"	var nfa_bp_p: \[20\]i32 = .{ 0 } ** 20;
 		"
 		"	_ = &data; _ = &p; _ = &pe; _ = &eof; _ = &cs;
 		"	_ = &buffer; _ = &blen;
-		"	_ = &nfa_len; _ = &nfa_count; _ = &nfa_bp_state; _ = &nfa_bp_p;
 
 	for Stmt: indep::stmt in Init {
 		if match Stmt [ExprStmt: expr_stmt] {
@@ -345,7 +338,7 @@ void zig( Output: stream )
 		"	%% write init;
 		"	%% write exec;
 		"
-		"	if ( cs >= [MachineName.mn_word]_first_final ) {
+		"	if ( cs >= [MachineName.word]_first_final ) {
 		"		_out( \"ACCEPT\\n\", .{} );
 		"	}
 		"	else {
