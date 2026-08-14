@@ -29,6 +29,14 @@ ARG ZIG_VERSION=0.16.0
 # and arm64.
 FROM ubuntu:${UBUNTU_TAG} AS dev
 ENV DEBIAN_FRONTEND=noninteractive
+
+# By default the container will run in the C locale. Some ragel contributions
+# are in other charsets so ensure those display correctly when working in
+# containers built with this dockerfile. C.UTF-8 is built into glibc, so no
+# locales package is needed. LANG only: leave LC_ALL unset so the user can
+# still override individual categories.
+ENV LANG=C.UTF-8
+
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
