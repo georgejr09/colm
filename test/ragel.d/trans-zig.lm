@@ -188,6 +188,11 @@ int print_stmt( Stmt: indep::print_stmt )
 		send Out
 			"_out( \"{s}\", .{ data\[@intCast(ts)..@intCast(te)\] } );
 	}
+	case [`print_off `;]
+	{
+		send Out
+			"_out( \"{d}\", .{ p } );
+	}
 }
 
 void buf_stmt( BufStmt: indep::buf_stmt )
