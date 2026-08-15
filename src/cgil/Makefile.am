@@ -7,5 +7,5 @@ CGIL_FILES = ril.lm rlhc-main.lm \
 	rlhc-crack.lm rlhc-d.lm rlhc-java.lm rlhc-julia.lm rlhc-ocaml.lm rlhc-rust.lm \
 	rlhc-zig.lm
 
-EXTRA_DIST = $(CGIL_FILES)
+EXTRA_DIST = $(CGIL_FILES) CMakeLists.txt
 

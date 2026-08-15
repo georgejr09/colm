@@ -162,6 +162,53 @@ $ make
 $ make install
 ```
 
+### Building with CMake
+
+CMake (3.16 or later) is supported as an alternative to autotools. It builds the
+same set of programs and libraries and reads the version numbers out of
+`configure.ac`, so there is no need to run `autogen.sh` or `configure` first.
+Only out-of-source builds are supported.
+
+```
+$ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build -j$(nproc)
+$ cmake --install build
+```
+
+Options:
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `COLM_MAKE_INSTALL` | `ON` | Generate install rules. |
+| `COLM_BUILD_EXAMPLES` | `OFF` | Build the ragel examples under `examples/`. |
+| `BUILD_STANDALONE` | `ON` on Windows | Link the executables statically. |
+| `BUILD_SHARED_LIBS` | `OFF` | Build libcolm, libfsm and libragel as shared libraries. |
+
+All executables are written to `build/bin`, which is where the `ragel` driver
+expects to find the per-host-language backends (`ragel-c`, `ragel-go`, ...).
+
+The install exports cmake packages, so a dependent project can do:
+
+```cmake
+find_package(colm REQUIRED)   # colm::colm, colm::libcolm
+find_package(ragel REQUIRED)  # ragel::ragel, ragel::libfsm, ragel::libragel
+```
+
+The autotools build remains the reference build. Known differences:
+
+- The run-from-the-build-tree detection described below relies on libtool, so a
+  colm built by cmake always uses the install location to find its includes and
+  runtime library. Install it before using it to compile colm programs.
+- The test suite under `test/`, the documentation under `doc/` (including the
+  ragel man page), and `colm-wrap` are autotools-only. A cmake install
+  therefore cannot serve as the `--with-colm` target of an autotools build.
+- Libtool builds both a static and a shared library and versions libcolm and
+  libfsm with `-release` (`libcolm-<version>.so`). CMake builds one flavour,
+  selected by `BUILD_SHARED_LIBS`, and versions all three with a soname
+  (`libcolm.so.0`).
+- `--enable-pool-malloc`, `--with-ragel-kelbt`, `--with-colm` and the
+  large-file-support checks have no cmake equivalent.
+
 ### Run-time dependencies
 
 The colm program depends on GCC at runtime. It produces a C program as output,

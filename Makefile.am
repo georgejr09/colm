@@ -22,7 +22,7 @@
 SUBDIRS = src doc test
 
 dist_doc_DATA = colm.vim ragel.vim
-EXTRA_DIST = colm.vim ragel.vim sedsubst
+EXTRA_DIST = colm.vim ragel.vim sedsubst CMakeLists.txt
 ACLOCAL_AMFLAGS = -I m4
 
 export CC CFLAGS

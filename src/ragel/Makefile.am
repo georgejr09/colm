@@ -61,6 +61,9 @@ version.h: Makefile
 	echo '#define RAGEL_PUBDATE "@RAGEL_PUBDATE@"' >> version.h
 
 EXTRA_DIST = \
+	CMakeLists.txt \
+	version.h.cmake.in \
+	ragel-config.cmake.in \
 	$(RAGEL_LM) \
 	rlscan.rl \
 	rlparse.kh \
