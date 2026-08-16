@@ -1,4 +1,8 @@
+if INSTALL_RAGEL
 bin_PROGRAMS = ragel-ruby
+else
+noinst_PROGRAMS = ragel-ruby
+endif
 
 ragel_ruby_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel -I$(top_srcdir)/src/include
 

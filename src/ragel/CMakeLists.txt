@@ -119,7 +119,7 @@ function(ragel_host name backend rlhc lm)
 
 	target_link_libraries(${name} PRIVATE libragel libfsm)
 
-	if(COLM_MAKE_INSTALL)
+	if(COLM_INSTALL_RAGEL)
 		install(TARGETS ${name}
 			EXPORT ${_PACKAGE_NAME}-targets
 			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -132,7 +132,7 @@ foreach(_subdir host-asm host-c host-crack host-csharp host-d host-go
 	add_subdirectory(${_subdir})
 endforeach()
 
-if(COLM_MAKE_INSTALL)
+if(COLM_INSTALL_RAGEL)
 	if(NOT DEFINED CMAKE_INSTALL_CMAKEDIR_RAGEL)
 		set(CMAKE_INSTALL_CMAKEDIR_RAGEL
 			"${CMAKE_INSTALL_LIBDIR}/cmake/${_PACKAGE_NAME}"

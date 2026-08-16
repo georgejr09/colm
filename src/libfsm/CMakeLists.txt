@@ -45,7 +45,7 @@ set_target_properties(libfsm PROPERTIES
 
 add_library(ragel::libfsm ALIAS libfsm)
 
-if(COLM_MAKE_INSTALL)
+if(COLM_INSTALL_RAGEL)
 	set(_libfsm_install_hdr)
 	foreach(_hdr ${LIBFSM_HDR})
 		list(APPEND _libfsm_install_hdr "${CMAKE_CURRENT_LIST_DIR}/${_hdr}")

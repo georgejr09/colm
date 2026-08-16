@@ -1,4 +1,8 @@
+if INSTALL_RAGEL
 bin_PROGRAMS = ragel-c
+else
+noinst_PROGRAMS = ragel-c
+endif
 
 ragel_c_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel -I$(top_srcdir)/src/include
 

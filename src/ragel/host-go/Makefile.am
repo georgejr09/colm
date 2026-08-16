@@ -1,6 +1,9 @@
+if INSTALL_RAGEL
 bin_PROGRAMS = ragel-go
-
 data_DATA = out-go.lm
+else
+noinst_PROGRAMS = ragel-go
+endif
 
 ragel_go_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel -I$(top_srcdir)/src/include
 

@@ -162,6 +162,25 @@ $ make
 $ make install
 ```
 
+### Installing one half of the suite
+
+Colm and ragel install together by default. The two halves can be installed
+separately, which is useful for a ragel user who has no interest in colm, or a
+colm user who has no interest in ragel:
+
+```
+$ ./configure --disable-install-colm    # ragel only
+$ ./configure --disable-install-ragel   # colm only
+```
+
+The whole tree is still built either way. Ragel's parsers are written in colm,
+so colm has to be built before ragel can be, and building everything keeps the
+test suite runnable from the build tree. Only the install step is narrowed.
+
+Two things go out in both cases and cannot be excluded from a ragel-only
+install: the colm runtime library, which the ragel programs link, and the aapl
+headers, which the installed libfsm headers include.
+
 ### Building with CMake
 
 CMake (3.16 or later) is supported as an alternative to autotools. It builds the
@@ -180,9 +199,15 @@ Options:
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `COLM_MAKE_INSTALL` | `ON` | Generate install rules. |
+| `COLM_INSTALL_COLM` | `ON` | Install the colm program and its development files. |
+| `COLM_INSTALL_RAGEL` | `ON` | Install ragel, its host backends, libragel, libfsm and cgil. |
 | `COLM_BUILD_EXAMPLES` | `OFF` | Build the ragel examples under `examples/`. |
 | `BUILD_STANDALONE` | `ON` on Windows | Link the executables statically. |
 | `BUILD_SHARED_LIBS` | `OFF` | Build libcolm, libfsm and libragel as shared libraries. |
+
+`COLM_INSTALL_COLM` and `COLM_INSTALL_RAGEL` are the cmake spelling of
+`--disable-install-colm` and `--disable-install-ragel`; see [Installing one half
+of the suite](#installing-one-half-of-the-suite) for what each one covers.
 
 All executables are written to `build/bin`, which is where the `ragel` driver
 expects to find the per-host-language backends (`ragel-c`, `ragel-go`, ...).
