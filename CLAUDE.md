@@ -39,6 +39,16 @@ make install
 make clean
 ```
 
+CMake (3.16+) is supported as an alternative build system. It covers colm,
+libfsm and ragel (including all host-language backends), but not the test
+suite. Out-of-source builds only.
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+cmake --install build
+```
+
 ## Development Commands
 
 ```bash

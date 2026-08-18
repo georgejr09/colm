@@ -11,7 +11,7 @@ ragel_c_LDADD = $(LIBFSM_LA) $(LIBCOLM_LA) ../libragel.la
 
 BUILT_SOURCES = rlparse.c rlreduce.cc
 
-EXTRA_DIST = rlparse.lm
+EXTRA_DIST = rlparse.lm CMakeLists.txt
 
 LM_DEPS = ../ragel.lm ../rlreduce.lm
 

@@ -41,3 +41,4 @@ if LINKER_NO_UNDEFINED
 libfsm_la_LDFLAGS += -Wl,--no-undefined
 endif
 
+EXTRA_DIST = CMakeLists.txt

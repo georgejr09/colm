@@ -204,7 +204,9 @@ CLEANFILES = \
 distclean-local:
 	-rm -rf include
 
-EXTRA_DIST = prog.lm colm.lm loadfinal.cc colm-wrap.sh
+EXTRA_DIST = prog.lm colm.lm loadfinal.cc colm-wrap.sh \
+	CMakeLists.txt config.h.cmake.in defs.h.cmake.in version.h.cmake.in \
+	colm-config.cmake.in
 
 colm-wrap: colm-wrap.sh
 	@$(top_srcdir)/sedsubst $< $@ -w,+x $(SED_SUBST)
