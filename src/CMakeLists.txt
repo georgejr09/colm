@@ -59,10 +59,12 @@ target_include_directories(libcolm
 	$<BUILD_INTERFACE:${COLM_INCLUDE_DIR}>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+# The colm runtime carries colm's version, not the suite's. This mirrors the
+# libtool -release string in Makefile.am.
 set_target_properties(libcolm PROPERTIES
 	OUTPUT_NAME colm
-	VERSION ${PROJECT_VERSION}
-	SOVERSION ${PROJECT_VERSION_MAJOR})
+	VERSION ${COLM_VERSION_NUMERIC}
+	SOVERSION ${COLM_VERSION_MAJOR})
 
 add_library(colm::libcolm ALIAS libcolm)
 
@@ -252,7 +254,7 @@ if(COLM_INSTALL_COLM OR COLM_INSTALL_RAGEL)
 	include(CMakePackageConfigHelpers)
 	write_basic_package_version_file(
 		"${PROJECT_BINARY_DIR}/${_PACKAGE_NAME}-config-version.cmake"
-		VERSION ${PROJECT_VERSION}
+		VERSION ${COLM_VERSION_NUMERIC}
 		COMPATIBILITY AnyNewerVersion)
 
 	install(FILES

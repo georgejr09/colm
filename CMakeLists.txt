@@ -23,38 +23,49 @@ endif()
 #
 file(READ "${CMAKE_CURRENT_LIST_DIR}/configure.ac" _configure_ac)
 
-# AC_INIT([colm-suite],[0.15.0-pre.1])
+# The suite version is ragel's, being the highest of the components. Colm
+# versions independently and lower, so it carries its own number.
+#
+# AC_INIT([colm-suite],[7.1.0-pre.1])
 set(_ac_init_re "AC_INIT\\(\\[?([A-Za-z0-9_.+-]+)\\]?,[ \t]*\\[?([A-Za-z0-9_.+-]+)\\]?")
 if(NOT _configure_ac MATCHES "${_ac_init_re}")
 	message(FATAL_ERROR "could not read AC_INIT from configure.ac")
 endif()
-set(COLM_PACKAGE "${CMAKE_MATCH_1}")
-set(COLM_VERSION "${CMAKE_MATCH_2}")
+set(SUITE_PACKAGE "${CMAKE_MATCH_1}")
+set(SUITE_VERSION "${CMAKE_MATCH_2}")
 
 # The full version can carry a pre-release suffix. project() wants digits only.
-string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" COLM_VERSION_NUMERIC "${COLM_VERSION}")
+string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" SUITE_VERSION_NUMERIC "${SUITE_VERSION}")
 
 if(NOT _configure_ac MATCHES "[\r\n]PUBDATE=\"([^\"]*)\"")
 	message(FATAL_ERROR "could not read PUBDATE from configure.ac")
 endif()
+set(SUITE_PUBDATE "${CMAKE_MATCH_1}")
+
+if(NOT _configure_ac MATCHES "[\r\n]COLM_VERSION=\"([^\"]*)\"")
+	message(FATAL_ERROR "could not read COLM_VERSION from configure.ac")
+endif()
+set(COLM_VERSION "${CMAKE_MATCH_1}")
+string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" COLM_VERSION_NUMERIC "${COLM_VERSION}")
+string(REGEX MATCH "^[0-9]+" COLM_VERSION_MAJOR "${COLM_VERSION_NUMERIC}")
+
+if(NOT _configure_ac MATCHES "[\r\n]COLM_PUBDATE=\"([^\"]*)\"")
+	message(FATAL_ERROR "could not read COLM_PUBDATE from configure.ac")
+endif()
 set(COLM_PUBDATE "${CMAKE_MATCH_1}")
 
-if(NOT _configure_ac MATCHES "RAGEL_VERSION=\"([^\"]*)\"")
-	message(FATAL_ERROR "could not read RAGEL_VERSION from configure.ac")
-endif()
-set(RAGEL_VERSION "${CMAKE_MATCH_1}")
-string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" RAGEL_VERSION_NUMERIC "${RAGEL_VERSION}")
-
-if(NOT _configure_ac MATCHES "RAGEL_PUBDATE=\"([^\"]*)\"")
-	message(FATAL_ERROR "could not read RAGEL_PUBDATE from configure.ac")
-endif()
-set(RAGEL_PUBDATE "${CMAKE_MATCH_1}")
+# Ragel names the suite, so configure.ac derives these rather than repeating
+# them. There is nothing to parse.
+set(RAGEL_VERSION "${SUITE_VERSION}")
+set(RAGEL_VERSION_NUMERIC "${SUITE_VERSION_NUMERIC}")
+set(RAGEL_PUBDATE "${SUITE_PUBDATE}")
 
 project(colm-suite
-	VERSION ${COLM_VERSION_NUMERIC}
+	VERSION ${SUITE_VERSION_NUMERIC}
 	LANGUAGES C CXX)
 
-message(STATUS "colm ${COLM_VERSION} (${COLM_PUBDATE}), "
+message(STATUS "colm-suite ${SUITE_VERSION} (${SUITE_PUBDATE}): "
+	"colm ${COLM_VERSION} (${COLM_PUBDATE}), "
 	"ragel ${RAGEL_VERSION} (${RAGEL_PUBDATE})")
 
 #
@@ -158,10 +169,6 @@ check_symbol_exists(fopencookie "stdio.h" HAVE_FOPENCOOKIE)
 if("${CMAKE_BUILD_TYPE}" MATCHES "[Dd][Ee][Bb]")
 	set(DEBUG 1)
 endif()
-
-# Kept for the benefit of the generated headers.
-set(VERSION "${COLM_VERSION}")
-set(PUBDATE "${COLM_PUBDATE}")
 
 # Definitions needed by src/main.cc when it drives the C compiler.
 set(common_COMPILE_DEFINITIONS
