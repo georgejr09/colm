@@ -43,7 +43,7 @@ endforeach()
 
 add_custom_target(cgil ALL DEPENDS ${_cgil_programs})
 
-if(COLM_MAKE_INSTALL)
+if(COLM_INSTALL_RAGEL)
 	set(_cgil_data)
 	foreach(_f ${CGIL_FILES})
 		list(APPEND _cgil_data "${CMAKE_CURRENT_LIST_DIR}/${_f}")

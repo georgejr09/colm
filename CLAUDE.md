@@ -49,6 +49,19 @@ cmake --build build -j$(nproc)
 cmake --install build
 ```
 
+Colm and ragel install together by default. Either half can be installed on its
+own; the whole tree is built either way.
+
+```bash
+# autotools
+./configure --disable-install-colm     # ragel only
+./configure --disable-install-ragel    # colm only
+
+# cmake
+cmake -S . -B build -DCOLM_INSTALL_COLM=OFF
+cmake -S . -B build -DCOLM_INSTALL_RAGEL=OFF
+```
+
 ## Development Commands
 
 ```bash

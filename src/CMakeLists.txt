@@ -209,7 +209,7 @@ add_subdirectory(ragel)
 #
 # Install.
 #
-if(COLM_MAKE_INSTALL)
+if(COLM_INSTALL_COLM OR COLM_INSTALL_RAGEL)
 	set(_PACKAGE_NAME colm)
 
 	if(NOT DEFINED CMAKE_INSTALL_CMAKEDIR)
@@ -221,14 +221,25 @@ if(COLM_MAKE_INSTALL)
 	configure_file(colm-config.cmake.in
 		"${PROJECT_BINARY_DIR}/${_PACKAGE_NAME}-config.cmake" @ONLY)
 
-	install(FILES ${COLM_INSTALL_HDR}
-		DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/colm")
-
-	install(TARGETS libcolm colm
+	#
+	# The runtime library goes out even when only ragel is being installed.
+	# The ragel programs link it, and the exported ragel targets name
+	# colm::libcolm, so the colm package has to be resolvable.
+	#
+	install(TARGETS libcolm
 		EXPORT ${_PACKAGE_NAME}-targets
 		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+	if(COLM_INSTALL_COLM)
+		install(TARGETS colm
+			EXPORT ${_PACKAGE_NAME}-targets
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+		install(FILES ${COLM_INSTALL_HDR}
+			DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/colm")
+	endif()
 
 	install(EXPORT ${_PACKAGE_NAME}-targets
 		NAMESPACE ${_PACKAGE_NAME}::
@@ -249,7 +260,8 @@ if(COLM_MAKE_INSTALL)
 		"${PROJECT_BINARY_DIR}/${_PACKAGE_NAME}-config-version.cmake"
 		DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
-	# aapl is a header-only template library.
+	# aapl is a header-only template library. The installed libfsm headers
+	# include it, so it goes out with either half of the suite.
 	install(DIRECTORY aapl/
 		DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/aapl"
 		FILES_MATCHING PATTERN "*.h")

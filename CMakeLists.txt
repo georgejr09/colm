@@ -63,6 +63,37 @@ message(STATUS "colm ${COLM_VERSION} (${COLM_PUBDATE}), "
 option(COLM_MAKE_INSTALL
 	"Generate install rules for the colm suite" ON)
 
+#
+# Which halves of the suite to install. The build always covers the whole tree:
+# ragel's parsers are written in colm, so colm is built either way. These
+# select what the install step copies out.
+#
+# The colm runtime library and the aapl headers go out in both cases. Ragel
+# links libcolm and the installed libfsm headers include aapl, so neither can
+# be left out of a ragel-only install.
+#
+option(COLM_INSTALL_COLM
+	"Install the colm program and its development files" ON)
+
+option(COLM_INSTALL_RAGEL
+	"Install ragel, its host backends, libragel, libfsm and cgil" ON)
+
+if(COLM_MAKE_INSTALL AND NOT COLM_INSTALL_COLM AND NOT COLM_INSTALL_RAGEL)
+	message(FATAL_ERROR
+		"COLM_INSTALL_COLM and COLM_INSTALL_RAGEL cannot both be off. "
+		"Use -DCOLM_MAKE_INSTALL=OFF to drop the install rules entirely.")
+endif()
+
+#
+# Fold COLM_MAKE_INSTALL into the two selectors so that each install block
+# below only has one variable to test. These shadow the cache entries of the
+# same name for this directory and everything under it.
+#
+if(NOT COLM_MAKE_INSTALL)
+	set(COLM_INSTALL_COLM OFF)
+	set(COLM_INSTALL_RAGEL OFF)
+endif()
+
 option(COLM_BUILD_EXAMPLES
 	"Build the ragel examples" OFF)
 
@@ -144,8 +175,13 @@ if(COLM_BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()
 
-if(COLM_MAKE_INSTALL)
-	# dist_doc_DATA in Makefile.am
-	install(FILES colm.vim ragel.vim
+# dist_doc_DATA in Makefile.am
+if(COLM_INSTALL_COLM)
+	install(FILES colm.vim
+		DESTINATION "${CMAKE_INSTALL_DOCDIR}")
+endif()
+
+if(COLM_INSTALL_RAGEL)
+	install(FILES ragel.vim
 		DESTINATION "${CMAKE_INSTALL_DOCDIR}")
 endif()

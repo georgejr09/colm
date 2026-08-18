@@ -149,6 +149,34 @@ AC_ARG_ENABLE(program,
 AM_CONDITIONAL([BUILD_PROGRAM],    [test "x$build_program" = "xyes"])
 AM_CONDITIONAL([WITH_RAGEL_KELBT], [test "x$RAGEL_KELBT" = "xyes"])
 
+dnl
+dnl Which halves of the suite to install. The build always covers the whole
+dnl tree: ragel's parsers are written in colm, so colm must be built either
+dnl way. These options control only what "make install" copies out.
+dnl
+dnl The colm runtime library and the aapl headers are installed in both cases.
+dnl Ragel links libcolm and the installed libfsm headers include aapl, so
+dnl neither can be left out of a ragel-only install.
+dnl
+AC_ARG_ENABLE(install-colm,
+	[AS_HELP_STRING([--disable-install-colm],[do not install the colm program and headers])],
+	[install_colm=$enableval],
+	[install_colm=yes]
+)
+
+AC_ARG_ENABLE(install-ragel,
+	[AS_HELP_STRING([--disable-install-ragel],[do not install ragel, libragel, libfsm or cgil])],
+	[install_ragel=$enableval],
+	[install_ragel=yes]
+)
+
+if test "x$install_colm" != "xyes" && test "x$install_ragel" != "xyes"; then
+	AC_MSG_ERROR([nothing left to install: give at most one of --disable-install-colm and --disable-install-ragel])
+fi
+
+AM_CONDITIONAL([INSTALL_COLM],  [test "x$install_colm"  = "xyes"])
+AM_CONDITIONAL([INSTALL_RAGEL], [test "x$install_ragel" = "xyes"])
+
 dnl This is from ragel, but already have one above from colm. Need to merge.
 dnl AM_CONDITIONAL([BUILD_MANUAL],     [test "x$build_manual" = "xyes"])
 
