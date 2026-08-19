@@ -21,6 +21,10 @@ Ragel 7.1.0 - Aug 19, 2026
   backtrack into the rule that ignores uninteresting sections and consume the
   broken specification through to the closing "}}%", so the error went
   unnoticed and the machine was silently ignored.
+ -Only mark input items as processed when their parse data matches. With
+  several named machines interleaved in one file, completing the last block
+  of one machine marked all preceding items as processed and ready for
+  writing, including machines that were not yet complete.
  -C codegen: the signedness of the char host type is now decided from
   CHAR_MIN rather than assumed, SCHAR_MIN and SCHAR_MAX are used for the
   signed char host type, and the "signed" prefix is written when specifying
@@ -29,8 +33,6 @@ Ragel 7.1.0 - Aug 19, 2026
   now survive into the generated code.
  -Rust: permit the apostrophe in output, and improved lexing of character
   literals and identifiers, including lifetimes, in the host scanner.
- -OCaml: use Bytes.to_string on buffer objects.
- -ASM: build with -no-pie.
  -Intermediate language: allow an expression as the base of a deref or
   offset, and support chained array subscripts.
  -Data files are installed to PREFIX/share/colm rather than PREFIX/share,
