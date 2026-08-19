@@ -1,5 +1,30 @@
-Ragel 7.0.1 - Aug XXX, 2018
-===========================
+Ragel 7.0.4 - Feb 15, 2021
+==========================
+ -The usage output now lists the per-host-language programs (ragel-c,
+  ragel-d, ragel-go, ragel-java, ...) in place of the host language flags
+  they replaced (-C, -D, -Z, -J, ...).
+ -The abort-compile exception is now caught in the non-ragel programs.
+  Previously only the ragel entry point handled it, so an abort in the rlhc
+  driver escaped instead of becoming an exit status.
+ -Creation of the src/include/ragel symlink moved out of the makefile and
+  into the configure script.
+ -Requires colm 0.14.7.
+
+Ragel 7.0.3 - Jan 18, 2021
+==========================
+ -Requires colm 0.14.6. There are no other changes; this release exists to
+  track the colm release.
+
+Ragel 7.0.2 - Jan 3, 2021
+=========================
+ -The version banner now uses the package version directly. The separate
+  RAGEL_VERSION and RAGEL_PUBDATE substitutions have been removed from the
+  build.
+ -Copyright years updated.
+ -Requires colm 0.14.5.
+
+Ragel 7.0.1 - Nov 25, 2020
+==========================
  -Condition implemenation rewritten. Previously utilized an extension of the
   alphabet space to encode "character when A". The character was looked up, the
   applicable condition set determined, a constant value was added to the
