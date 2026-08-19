@@ -1,3 +1,39 @@
+Ragel 7.1.0 - Aug 19, 2026
+==========================
+ -Added Zig as a host language. The ragel-zig program supports all code
+  styles.
+ -Ragel is now distributed together with Colm, in a single colm-suite
+  tarball. Ragel's front end is written in Colm, so earlier ragel 7 releases
+  required a separately installed colm of an exactly matching version and
+  refused to configure without it. There is no longer a version to match.
+ -Ragel carries its own version number, independent of Colm's. The suite
+  tarball is named for the highest version it contains, which is Ragel's.
+ -Either half of the suite can be installed on its own, with
+  --disable-install-colm or --disable-install-ragel. The whole tree is built
+  in both cases, only the install step is narrowed.
+ -A cmake build is available as an alternative to autotools. It covers colm,
+  libfsm, cgil and ragel with all of its host language backends, but not the
+  test suite or the documentation.
+ -Generate an EOF check when a machine has from-state actions. From-state
+  actions execute on EOF, but their presence was not considered when deciding
+  whether to test against EOF, so they ran only when some other condition
+  happened to require the test.
+ -C codegen: the signedness of the char host type is now decided from
+  CHAR_MIN rather than assumed, SCHAR_MIN and SCHAR_MAX are used for the
+  signed char host type, and the "signed" prefix is written when specifying
+  the size of the signed types.
+ -Host language comments are retained across the intermediate language and
+  now survive into the generated code.
+ -Rust: permit the apostrophe in output.
+ -OCaml: use Bytes.to_string on buffer objects.
+ -ASM: build with -no-pie.
+ -Intermediate language: allow an expression as the base of a deref or
+  offset, and support chained array subscripts.
+ -Data files are installed to PREFIX/share/colm.
+ -The ragel man page filled in its version and date placeholders, which had
+  been shipping literally.
+ -macOS: replaced deprecated sprintf uses with snprintf.
+
 Ragel 7.0.4 - Feb 15, 2021
 ==========================
  -The usage output now lists the per-host-language programs (ragel-c,
