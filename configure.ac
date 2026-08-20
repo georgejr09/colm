@@ -20,8 +20,17 @@ dnl LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM
 dnl OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 dnl SOFTWARE.
   
-AC_INIT([colm-suite],[0.15.0-pre.1])
+dnl The suite version is the highest of the versions contained in it, which is
+dnl ragel's. Colm carries its own, lower version number in COLM_VERSION below.
+AC_INIT([colm-suite],[7.1.0-pre.1])
 PUBDATE="April 2026"
+
+dnl
+dnl Colm build configuration. Colm versions independently of the suite, so it
+dnl cannot use the AC_INIT version.
+dnl
+COLM_VERSION="0.15.0-pre.1"
+COLM_PUBDATE="April 2026"
 
 AM_INIT_AUTOMAKE([foreign])
 
@@ -32,6 +41,11 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_SUBST(PUBDATE)
 AC_DEFINE_UNQUOTED([PUBDATE], ["$PUBDATE"], [publication date])
+
+AC_SUBST(COLM_VERSION)
+AC_SUBST(COLM_PUBDATE)
+AC_DEFINE_UNQUOTED([COLM_VERSION], ["$COLM_VERSION"], [colm version])
+AC_DEFINE_UNQUOTED([COLM_PUBDATE], ["$COLM_PUBDATE"], [colm publication date])
 
 AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([void *])
@@ -461,10 +475,17 @@ AC_SUBST(SED_SUBST)
 dnl
 dnl Ragel build configuration
 dnl
-RAGEL_VERSION="7.1.0-pre.1"
-RAGEL_PUBDATE="April 2026"
+dnl Ragel is the highest-versioned component, so the suite is named after it.
+dnl Derived rather than repeated, to keep the version in one place.
+RAGEL_VERSION="$PACKAGE_VERSION"
+RAGEL_PUBDATE="$PUBDATE"
 AC_SUBST(RAGEL_VERSION)
 AC_SUBST(RAGEL_PUBDATE)
+
+dnl The ragel man page is generated with sedsubst, not config.status, so it
+dnl needs these in SED_SUBST to be filled in.
+SED_SUBST="$SED_SUBST -e 's|[@]RAGEL_VERSION[@]|$RAGEL_VERSION|g'"
+SED_SUBST="$SED_SUBST -e 's|[@]RAGEL_PUBDATE[@]|$RAGEL_PUBDATE|g'"
 
 dnl Use local colm components
 COLM='$(abs_top_builddir)/src/colm'
