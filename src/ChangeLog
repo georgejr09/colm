@@ -1,3 +1,50 @@
+colm 0.13.0.1 - Dec 14, 2014
+----------------------------
+	* The list, map, parser and stream types now have object semantics. A type
+	  reference resolves to a pointer to the object and instances are made with
+	  the new operator.
+	* Added the new operator, which allocates an object and yields a pointer to
+	  it.
+	* The keyword struct was added as a synonym for context.
+	* Added the deref operator.
+	* Added the switch statement.
+	* Added list_el and map_el declarations, for naming the list and map link
+	  fields inside a struct.
+	* Added the list2, list2el, map2 and map2el types, which are lists and maps
+	  built from links declared in the element struct, rather than from
+	  separately allocated cells.
+	* Iterators automatically deref lists and maps.
+	* The list push and pop functions now operate on the head of the list.
+	  Added push_head, push_tail, pop_head and pop_tail. Removed append and
+	  remove_end.
+	* The send statement now converts trees to strings. Added send_tree, which
+	  retains the previous behaviour.
+	* The parse statement now converts trees to strings. Added parse_tree,
+	  which retains the previous behaviour.
+	* Added print as a synonym for send stdout.
+	* Parse statements can take functions that return void.
+	* String construction lists convert non-string trees to strings.
+	* Added the close function to stream.
+	* Added the append open mode ('a') to the open function.
+	* argv no longer contains the program name. It is available in the separate
+	  argv0 variable.
+	* Production label enum values in the generated C++ export interface no
+	  longer have a leading underscore.
+	* Removed the vector type.
+	* The -o option now works when compiling to a binary.
+	* Handle partially matched tokens on EOF.
+	* The include load now checks that the file was opened.
+	* Bounds check in the object field lookup.
+	* Free the input list when a parser is cleaned up.
+	* Streams embedded in a parse are downrefed when consumed.
+	* Can break from a for loop when the iterator argument is not a reference.
+	* Removed the GPL license file and stripped the GPL and LGPL headers from
+	  the sources.
+	* The test suite is built with autotools and honours the COLM environment
+	  variable, allowing an installed colm to be tested.
+	* Removed the test directory and the generated sources from the
+	  distribution.
+
 colm 0.12.0 - Feb 1, 2014
 -------------------------
 	* allow matching against reference types
