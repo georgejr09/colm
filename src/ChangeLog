@@ -1,3 +1,30 @@
+colm 0.13.0.3 - Jan 28, 2016
+----------------------------
+	* Added reductions. A reduction block is declared with reduction <id> ...
+	  end and holds host language code to be run as the parse tree is reduced.
+	  An action is attached either to a nonterminal, with type_ref { ... }, or
+	  to a named production, with type_ref: label { ... }.
+	* Reduction actions refer to the left hand side with $$, to right hand side
+	  elements by name with $name or by position with $1, $2, and to the
+	  locations of right hand side elements with @name, @1, @2. The location
+	  can be omitted.
+	* Added the reduce expression, which runs a named reduction over parsed
+	  input.
+	* A program can contain more than one reduction.
+	* Added the $$ operator, which converts a tree to a string, including the
+	  attributes.
+	* Added the -m option, which writes the C++ commit code to a file.
+	* Added the -b option, which names the program object. It also omits the
+	  host adapter functions, which need to appear only once in a binary that
+	  contains colm code.
+	* Generated reduction code carries line directives back to the colm source.
+	* The parse tree allocator is a pointer in the parser, so it can be
+	  overridden.
+	* Run buffers are sized dynamically when a token is extracted.
+	* Tokens taken from strings are given a default location.
+	* Data pushed in front of a stream sources its location.
+	* Added vim syntax highlighting for reduction blocks.
+
 colm 0.13.0.2 - Sep 20, 2015
 ----------------------------
 	* Structs are now a distinct non-tree runtime object, with their own
