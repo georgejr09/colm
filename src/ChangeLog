@@ -1,3 +1,22 @@
+colm 0.14.2 - Nov 25, 2020
+--------------------------
+	* The bare send statement is introduced with << or <-. Without a leading
+	  operator it was ambiguous with the continuation of the statement before
+	  it, which the language could not carry.
+	* Removed the warning about a concatenation component outdented beyond the
+	  first. The send operators make the check unnecessary.
+	* All source code moved under src. The aapl, libfsm and cgil directories
+	  are now src/aapl, src/libfsm and src/cgil.
+	* Removed the ragel examples, left over from the time the repositories were
+	  one.
+	* Rust code generation: loop labels of the form 'l: while are recognised
+	  and emitted, unsigned integers are written without a trailing u, and no
+	  label is placed at the end of a loop when loop labels are used for
+	  breaking, which rust does not accept.
+	* Added tests for production redefinition.
+	* Thinned out the rlhc test cases.
+	* Added clean-local targets that remove the test working directories.
+
 colm 0.14.1 - Apr 17, 2020
 --------------------------
 	* Added the redef statement, which redefines a nonterminal. A [...]
