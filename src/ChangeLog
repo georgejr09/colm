@@ -1,3 +1,104 @@
+colm 0.14.1 - Apr 17, 2020
+--------------------------
+	* Added the redef statement, which redefines a nonterminal. A [...]
+	  production stands in for the productions of the previous definition,
+	  allowing them to be retained while others are added.
+	* A production element can be a parenthesized sublist, with alternation
+	  inside and an optional repeat operator following.
+	* Added the left-recursive repeat operators <* and <+. The existing * and +
+	  operators are right-recursive.
+	* Concatenation is restored to patterns, constructors and strings. The
+	  bracketed sublist form moved to the top level of each. Colm warns when a
+	  component of a top-level concatenation is outdented beyond the first,
+	  since that is likely an unintended concatenation with a bare send.
+	* The trim and no-trim operators ^ and @ are general unary operators in
+	  expressions. The @ prefix is no longer specific to constructors,
+	  accumulators and strings.
+	* The trim decision is made at run time. Streams and parser inputs carry an
+	  auto_trim setting, which an explicit operator in the expression
+	  overrides. Added the auto_trim function to input and stream.
+	* The bare send statement sends to the variable named _, rather than to the
+	  stds list of streams.
+	* The input object of a parser has its own type, separate from stream.
+	* The token keyword can be used in place of literal when defining literal
+	  tokens.
+	* Backtick literals can be closed with a second backtick, which allows an
+	  operator to follow without an intervening space, as in [`,`?]. The
+	  backtick character is excluded from literals. The ] character remains
+	  excluded in the second and greater positions.
+	* Reduction actions can reference a tree with $*name and $*N.
+	* The right-hand side of a switch variable is available in the case
+	  clauses.
+	* A named right-hand-side element of a tree can be set.
+	* Tokens have file and col fields, which give the file name and column of
+	  the location.
+	* Printing tracks an indentation level. The _IN_ and _EX_ language elements
+	  raise and lower it, in streams and in string accumulators.
+	* Added -r, which runs the output program, replacing the colm process.
+	* Added -p, which writes the C parse object to a file. It must be used with
+	  -c. With -c given, -o also writes the parse object, otherwise it writes
+	  the binary.
+	* Corrected the usage text for the -b and -o options.
+	* The alphabet type used by the parsing machinery is unsigned char. Added
+	  the colm_alph_t type along with colm_alph_from_cstr and
+	  colm_cstr_from_alph. Ranges that cross 0x80 no longer need special
+	  handling.
+	* Exported C++ classes derive from a common ExportTree class, declared in
+	  the new colmex.h header. Added RepeatIter, a non-recursive iterator over
+	  repetitions that works with both left-recursive and right-recursive
+	  lists. Added colm_get_left_repeat_next and colm_get_left_repeat_val.
+	* Exported variables are available from C. Each is declared as an integer
+	  named colm_export_<name>, for passing to colm_get_global.
+	* Added colm_set_reduce_clean, which controls whether trees are freed after
+	  each reduction action. Retaining them leaves the trees underneath a
+	  reduction available.
+	* Made tree_to_str available in the library.
+	* The input and stream types are separated in the runtime, with the stream
+	  functions moving to stream.c.
+	* Streams track line lengths and use them to restore locations during push
+	  back. The starting line need not be 1.
+	* Pushing a string to an input uses the string's location, when it has one.
+	* The ragel state machine compiler moved to a repository of its own. Colm
+	  retains libfsm, the finite state machine library, which is installed as a
+	  library with headers in include/libfsm, and cgil, the code generation
+	  intermediate language, formerly rlhc, which is installed as colm source.
+	* Added a third bootstrap stage, which allows the grammar to be transformed
+	  by a colm program before it is compiled. The production sublists are
+	  implemented this way.
+	* Added --with-colm, which builds the colm parser with an external colm
+	  program, skipping the bootstrap.
+	* When more than one output file is written, the files are packed into an
+	  archive and extracted by separate make rules. Added the colm-wrap script,
+	  which drives this.
+	* The test suite is configured from the top-level configure script and
+	  covers aapl, colm, cgil, the ragel parser and the translations. The
+	  runtests script is installed for use by other packages.
+	* Added a github workflow that builds and tests, including from the
+	  distribution tarball.
+	* The aapl headers are installed.
+	* Programs built in the source tree link statically against libcolm.a.
+	  Installed programs are linked with an rpath.
+	* CMake improvements: read the version from configure.ac, export from both
+	  the build tree and the project directory, and support standalone
+	  executables.
+	* Added colm grammars for C++, Go, Python, Rust and PCRE.
+	* Added a CREDITS file.
+	* Fixed backtracking across literal blocks in constructors and added it to
+	  patterns.
+	* Fixed a segfault in the production label lookup when a production has no
+	  label.
+	* Reset tokend when a scan for ignores ahead of a region change fails.
+	* Fixed the error message for a literal type reference that is not found.
+	* Fixed the variable capture in read_word on 32 bit systems.
+	* Parse errors are no longer sent to cerr as text.
+	* Various fixes to the balance of pushes and pulls in the input system, and
+	  to the undoing of consumed data.
+	* Fixes for building with clang 9 on android, and for building and running
+	  the test suite on OSX.
+	* The vim syntax file highlights redef, the $*name and $*N reduction
+	  references, and end-quoted backtick literals. Keywords are contained
+	  inside [] regions.
+
 colm 0.13.0.6 - May 18, 2018
 ----------------------------
 	* Trees can be printed in a postfix notation, which serves as a streaming
