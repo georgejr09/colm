@@ -1,3 +1,38 @@
+colm 0.13.0.5 - May 11, 2017
+----------------------------
+	* Migrated from the GPL version 2 to the MIT license.
+	* Print, send and construct now trim automatically, which is consistent
+	  with the $ operator. The trim can be turned off with the @ operator in
+	  front of an expression. The rationale is that test inputs often have no
+	  surrounding ignores, making it easy to forget a trim is needed, and the
+	  occasional tree that does have them then gives an undesired result.
+	* Added the -E name=value option, which sets a string value available in
+	  the program.
+	* The -I and -L options now work, giving additional include paths to the
+	  compiler and library paths to the linker. Include paths are checked when
+	  opening includes.
+	* The usage message lists the full set of options.
+	* Added colm_error, for extracting the error string.
+	* Added a function for retrieving the reducer context.
+	* Program arguments can be passed in with lengths, which allows binary data
+	  to be passed.
+	* Matching a ref returns a tree type. A match turns a ref into a tree.
+	* An or block in a regular expression that produces nothing now yields the
+	  lambda machine.
+	* Fixed a crash in lookup when the left hand side has no object.
+	* No longer closing stdin, stdout and stderr.
+	* Added an asciidoc manual, with autoconf and automake support for building
+	  it. The .adoc input files are in the distribution.
+	* Added a coding conventions document.
+	* Call ldconfig in a postinst, since a shared library is now exported.
+	* Removed the proprietary tests and flattened the test directory.
+	* Updated the README to reflect the build and run-time dependencies.
+	* Fixed the type of the strtol return value in lexFactorRepNum, a class
+	  versus struct inconsistency for FsmCodeGen, a missing cast, a comma at
+	  the end of an enum and some redefined typedefs.
+	* Removed an obsolete include of alloca.h.
+	* vim syntax: the C++ keywords are restricted to inside reduction blocks.
+
 colm 0.13.0.4 - Jul 11, 2016
 ----------------------------
 	* Added a fail-parsing flag, which allows a reduction action to abort a
