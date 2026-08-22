@@ -1,3 +1,25 @@
+colm 0.13.0.4 - Jul 11, 2016
+----------------------------
+	* Added a fail-parsing flag, which allows a reduction action to abort a
+	  parse immediately. All alternate parsing paths are abandoned.
+	* A stream made with new collects the text sent to it. The text is
+	  available as a string in the tree field. This is much faster than sending
+	  to a line parser and extracting the tree just to convert it to text.
+	* Correct position information is computed in the top-level stream, which
+	  gives correct line numbers when parsing out of a string.
+	* File names used in locations are managed by the program and can be
+	  exported, allowing them to outlive the program they came from.
+	* Host adapter functions have unique names and are reached through function
+	  pointers, so that more than one colm program can be linked into a binary.
+	* libcolm is built shared, using the -release linker option.
+	* No longer building the p and d (production and debug) versions of the
+	  library. There is just libcolm.
+	* The reduction commit walks with tree_child, otherwise ignores and
+	  attributes put the walks out of sync.
+	* The commit shift count is initialized to -1. An initial value of zero
+	  could erroneously fail a parse when backing up to zero shifts.
+	* Fixed a string leak and a missing free in the system function.
+
 colm 0.13.0.3 - Jan 28, 2016
 ----------------------------
 	* Added reductions. A reduction block is declared with reduction <id> ...
