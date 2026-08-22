@@ -1,3 +1,16 @@
+colm 0.14.4 - Dec 23, 2020
+--------------------------
+	* Added the with_ignore iterator. It is the tree iterator, except that it
+	  also visits ignore tokens, which makes it possible to rewrite comments.
+	  This is primitive for now. Constructors for tokens do not work right,
+	  though the data field can be set.
+	* The libfsm library is installed with the version in its name, as libcolm
+	  already was.
+	* Removed the COLM_VERSION and COLM_PUBDATE substitutions, which duplicated
+	  VERSION and PUBDATE. They were left over from the time colm and ragel
+	  were in one repository.
+	* Updated the copyright year in the version banner.
+
 colm 0.14.3 - Dec 9, 2020
 -------------------------
 	* The standard streams are wrapped with fopencookie, when it is available.
