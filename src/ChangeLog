@@ -1,3 +1,20 @@
+colm 0.14.3 - Dec 9, 2020
+-------------------------
+	* The standard streams are wrapped with fopencookie, when it is available.
+	  A FILE opened with fdopen cannot be closed without also closing the file
+	  descriptor, so the FILE structs were leaked. This matters when colm is
+	  embedded in a long running program. Configure tests for fopencookie and
+	  falls back to fdopen.
+	* Fixed a leak of the stream line length array.
+	* aapl: re-issue va_start before the second vsnprintf when formatting a
+	  string. The formatting was wrong when the first attempt did not fit.
+	* aapl: cast template type pointers to void* before passing them to the
+	  memmove functions. Recent compilers warn about moving and copying
+	  non-trivial types, a risk these containers have always carried, and the
+	  cast better expresses what the code is doing.
+	* GenAction no longer holds an InputLoc, which keeps it a trivial type.
+	* dump_contents is compiled only when debugging is enabled.
+
 colm 0.14.2 - Nov 25, 2020
 --------------------------
 	* The bare send statement is introduced with << or <-. Without a leading
