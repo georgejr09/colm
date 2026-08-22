@@ -1,3 +1,17 @@
+colm 0.14.7 - Feb 9, 2021
+-------------------------
+	* Removed all dependence on BUILT_SOURCES. The dependencies on generated
+	  sources are now explicit. BUILT_SOURCES was still causing build failures
+	  on gentoo.
+	* The generated interface sources depend on their headers.
+	* Creation of version.h and of the src/include/colm symlink moved out of
+	  the makefile and into the configure script.
+	* Fixes for cross-compiling. AC_CHECK_FILES cannot run when cross
+	  compiling, so the checks for the DIST file and for an external colm fall
+	  back to a plain file test.
+	* Test suite: fixed a dangling pointer in the ragel parser load, where
+	  c_str was taken from a temporary string.
+
 colm 0.14.6 - Jan 18, 2021
 --------------------------
 	* Fixed vm_pop_type on big-endian systems. The value was read using the
