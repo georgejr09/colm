@@ -1,3 +1,45 @@
+colm 0.13.0.6 - May 18, 2018
+----------------------------
+	* Trees can be printed in a postfix notation, which serves as a streaming
+	  tree format for both output and input. Added the postfix function.
+	* Added the read_reduce statement, which runs a reduction over a stream in
+	  the postfix format.
+	* Removed the print_xml and print_xml_ac statements. The xml and xmlac
+	  functions, which collect to strings, do the same job.
+	* All printing is now handled with the send instructions. The print and
+	  prints statements are implemented using send.
+	* The prints statement takes the stream as an explicit first argument.
+	* Added the bare send statement, which sends to stds, a list of streams.
+	* Sending to a list of streams is allowed.
+	* Removed the expression statement and added a call statement. The parse,
+	  reduce, send, construct, match, make_tree, make_token and new forms can
+	  be used as either a statement or a factor.
+	* Removed string concatenation from patterns, constructors and strings.
+	  Only the send accumulator concatenates. This avoids an ambiguity between
+	  a concatenation and a bare send.
+	* Case clauses accept a production name in place of a pattern, and also a
+	  production name together with a pattern.
+	* void is a keyword and a non-tree type, rather than a language element.
+	* Added gets to parser, which returns the stream.
+	* Parse and embedded strings no longer trim, which makes them consistent
+	  with send.
+	* Sending a tree to a stream no longer converts it to a string. The
+	  conversion was the reason indentation was not coming out right.
+	* Added a CMake project.
+	* The manual is built only if asciidoc and pygments are available.
+	* Struct and language element identifiers are drawn from disjoint sets,
+	  which allows the runtime to verify that trees and structs are not mixed.
+	* Streams are given a unique struct id.
+	* Whether revert is enabled is tracked at runtime.
+	* The unescape function is generated only if it is needed.
+	* Fixed downrefs of the stream struct in the parse append, of the list
+	  struct in the list length, of structs in the reverse code, of the map in
+	  the map list length, and of values of void type. The list iterator
+	  destroy no longer downrefs its arguments, which are not trees.
+	* Fixed the comparison of reduce actions.
+	* The reduction info array is declared static.
+	* Handle the in-source-tree case when built by libtool.
+
 colm 0.13.0.5 - May 11, 2017
 ----------------------------
 	* Migrated from the GPL version 2 to the MIT license.
