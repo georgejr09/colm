@@ -1,3 +1,12 @@
+colm 0.14.5 - Jan 3, 2021
+-------------------------
+	* Reference counting fixes in the undoing of input pushes. A downref was
+	  missing when undoing a tree push. Undoing a stream push emitted the
+	  reverse code of a tree or data push, so the wrong undo operation ran;
+	  the stream push now has a reverse instruction of its own. An artificial
+	  ignore tree sent back to the input is upreffed.
+	* Added tests for the balance of pushes and pops.
+
 colm 0.14.4 - Dec 23, 2020
 --------------------------
 	* Added the with_ignore iterator. It is the tree iterator, except that it
