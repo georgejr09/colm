@@ -1,3 +1,10 @@
+colm 0.14.6 - Jan 18, 2021
+--------------------------
+	* Fixed vm_pop_type on big-endian systems. The value was read using the
+	  tree type and then cast, and the cast drops the high bits, which is
+	  where the value lives when the system is big-endian. The stack pointer
+	  is now cast and the value read through a pointer to the requested type.
+
 colm 0.14.5 - Jan 3, 2021
 -------------------------
 	* Reference counting fixes in the undoing of input pushes. A downref was
