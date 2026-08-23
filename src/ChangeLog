@@ -24,9 +24,10 @@ colm 0.15.0 - Aug 19, 2026
 	  rather than by clean.
 	* Internal dependencies are linked through the libcolm.la libtool archive,
 	  which allows building with slibtool as well as with GNU libtool.
-	* Data files are installed to PREFIX/share/colm rather than PREFIX/share,
-	  which was a nuisance for packaging. The runtests script is installed
-	  executable.
+	* The cgil data files and the runtests script are installed to the package
+	  data directory, PREFIX/share/colm-suite, rather than PREFIX/share, which
+	  was a nuisance for packaging. The runtests script is installed
+	  executable. The ragel.lm grammar still lands in PREFIX/share.
 	* The manual is built only when --enable-manual is given. The packages it
 	  needs are uncommon and often not present.
 	* The cmake build has been repaired and extended. It builds colm, libfsm,
