@@ -163,8 +163,8 @@ colm 0.14.1 - Apr 17, 2020
 	  sizeof(long), and for an unused variable when --disable-debug is given.
 	* The vim syntax file highlights redef.
 
-colm 0.14 - Jan 2020
---------------------
+colm 0.14 (unreleased) - Jan 2020
+---------------------------------
 	* Added the left-recursive repeat operators <* and <+. The existing * and +
 	  operators are right-recursive.
 	* A production element can be a parenthesized sublist, with alternation
@@ -206,8 +206,8 @@ colm 0.14 - Jan 2020
 	* The vim syntax file highlights the token keyword and end-quoted backtick
 	  literals.
 
-colm 0.13.1 - Nov 18, 2019
---------------------------
+colm 0.13.1 (unreleased) - Nov 18, 2019
+---------------------------------------
 	* The trim decision is made at run time. Streams and parser inputs carry an
 	  auto_trim setting, which an explicit operator in the expression
 	  overrides. Added the auto_trim function to input and stream.
