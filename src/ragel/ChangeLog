@@ -31,6 +31,9 @@ Ragel 7.1.0 - Aug 19, 2026
   the size of the signed types.
  -Host language comments are retained across the intermediate language and
   now survive into the generated code.
+ -Julia: the host lexer now recognizes julia comments, # and #= =#, in place
+  of the C forms // and /* */ it wrongly inherited. Julia host code that
+  relied on ragel consuming C-style comments must switch to julia syntax.
  -Rust: permit the apostrophe in output, and improved lexing of character
   literals and identifiers, including lifetimes, in the host scanner.
  -Intermediate language: allow an expression as the base of a deref or
