@@ -6,8 +6,8 @@ namespace julia_out
 
 	lex
 		token comment /
-			'//' any* :> '\n' |
-			'/*' any* :>> '*/'
+			'#=' any* :>> '=#' |
+			'#' any* :> '\n'
 		/
 
 		literal `function `end `while `if `else `elseif
@@ -20,7 +20,7 @@ namespace julia_out
 		/
 
 		token symbol /
-			'!' | '#' | '$' | '%' | '&' | '(' | ')' | '*' |
+			'!' | '$' | '%' | '&' | '(' | ')' | '*' |
 			'+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' |
 			'=' | '>' | '?' | '@' | '[' | ']' | '^' | '|' |
 			'~' /
