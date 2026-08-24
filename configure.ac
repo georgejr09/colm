@@ -400,13 +400,13 @@ main:
 EOF
 
 AC_MSG_CHECKING([checking if ragel ASM tests will build ... ])
-if sh -c "$ASM_BIN -o conftest.bin conftest.s" >>config.log 2>&1; then
+if sh -c "$ASM_BIN -no-pie -o conftest.bin conftest.s" >>config.log 2>&1; then
 	AC_MSG_RESULT([yes])
 else
 	AC_MSG_RESULT([no])
 	ASM_BIN=""
 fi
-rm -f conftest.s
+rm -f conftest.s conftest.bin
 
 SED_SUBST="$SED_SUBST -e 's|@D_BIN@|${D_BIN}|g'"
 SED_SUBST="$SED_SUBST -e 's|@JAVAC_BIN@|${JAVAC_BIN}|g'"
