@@ -23,7 +23,7 @@ dnl SOFTWARE.
 dnl The suite is a calendar-versioned distribution: YYYY.MM, zero padded,
 dnl with an optional micro for fixups (2026.08, then 2026.08.1) and -pre.N
 dnl for pre-releases. Each component carries its own version, declared below.
-AC_INIT([colm-suite],[2026.08-pre.1])
+AC_INIT([colm-suite],[2026.08])
 PUBDATE="August 2026"
 
 dnl
@@ -31,8 +31,8 @@ dnl Component versions. Every shipped component is versioned independently
 dnl of the suite: colm and ragel continue their own lines, aapl resumes the
 dnl line that ended at 2.14 in 2006, libfsm and cgil start their own.
 dnl
-COLM_VERSION="0.15.0-pre.1"
-COLM_PUBDATE="April 2026"
+COLM_VERSION="0.15.0"
+COLM_PUBDATE="August 2026"
 
 AAPL_VERSION="2.15.0"
 LIBFSM_VERSION="1.0.0"
@@ -489,8 +489,8 @@ AC_SUBST(SED_SUBST)
 dnl
 dnl Ragel build configuration
 dnl
-RAGEL_VERSION="7.1.0-pre.1"
-RAGEL_PUBDATE="April 2026"
+RAGEL_VERSION="7.1.0"
+RAGEL_PUBDATE="August 2026"
 AC_SUBST(RAGEL_VERSION)
 AC_SUBST(RAGEL_PUBDATE)
 
