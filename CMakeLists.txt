@@ -23,10 +23,10 @@ endif()
 #
 file(READ "${CMAKE_CURRENT_LIST_DIR}/configure.ac" _configure_ac)
 
-# The suite version is ragel's, being the highest of the components. Colm
-# versions independently and lower, so it carries its own number.
+# The suite is a calendar-versioned distribution, YYYY.MM; each component
+# carries its own version, declared as variables further down.
 #
-# AC_INIT([colm-suite],[7.1.0-pre.1])
+# AC_INIT([colm-suite],[2026.08])
 set(_ac_init_re "AC_INIT\\(\\[?([A-Za-z0-9_.+-]+)\\]?,[ \t]*\\[?([A-Za-z0-9_.+-]+)\\]?")
 if(NOT _configure_ac MATCHES "${_ac_init_re}")
 	message(FATAL_ERROR "could not read AC_INIT from configure.ac")
