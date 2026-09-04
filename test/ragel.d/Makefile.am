@@ -61,6 +61,24 @@ EXTRA_DIST = \
 
 CLEANFILES = working
 
+# gentests runs in the build directory and takes its cases from there. Out of
+# tree they are in the source directory, so link them in first. check_DATA is
+# built before check-TESTS runs.
+check_DATA = link-cases
+
+.PHONY: link-cases
+link-cases:
+	if test '$(builddir)' != '$(srcdir)'; then \
+		$(LN_S) -f '$(srcdir)/'*.rl '$(srcdir)/'*.h '$(builddir)'; \
+		test -L include3 && rm -f include3; \
+		$(LN_S) -f '$(srcdir)/include3' '$(builddir)'; \
+	fi
+
+clean-local:
+	if test '$(builddir)' != '$(srcdir)'; then \
+		rm -f *.rl *.h include3; \
+	fi
+
 TRANS_DEPS = \
 	$(RAGEL_LM)/ragel.lm \
 	trans-c.lm trans-asm.lm \
