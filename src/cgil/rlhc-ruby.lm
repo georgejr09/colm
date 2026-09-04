@@ -518,6 +518,7 @@ void ruby_trans( Output: stream, Start: start )
 	else {
 		send stderr
 			"failed to parse output: [Parser->error]
+		exit(1)
 	}
 }
 

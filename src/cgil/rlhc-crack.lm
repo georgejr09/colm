@@ -526,6 +526,7 @@ namespace crack_gen
 		else {
 			send stderr
 				"failed to parse output: [Parser->error]
+			exit(1)
 		}
 	}
 end

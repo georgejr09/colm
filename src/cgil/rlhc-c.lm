@@ -466,6 +466,7 @@ namespace c_gen
 		else {
 			send stderr
 				"failed to parse output: [_->error]
+			exit(1)
 		}
 	}
 end

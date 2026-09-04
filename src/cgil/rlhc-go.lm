@@ -447,6 +447,7 @@ namespace go_gen
 		else {
 			send stderr
 				"failed to parse output: [_->error]
+			exit(1)
 		}
 
 	}
