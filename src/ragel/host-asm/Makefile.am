@@ -4,6 +4,8 @@ else
 noinst_PROGRAMS = ragel-asm
 endif
 
+AUTOMAKE_OPTIONS = nostdinc
+
 ragel_asm_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel $(LIBFSM_CPPFLAGS) $(LIBCOLM_CPPFLAGS)
 
 dist_ragel_asm_SOURCES = main.cc

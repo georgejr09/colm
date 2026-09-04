@@ -4,6 +4,8 @@ else
 noinst_PROGRAMS = ragel-julia
 endif
 
+AUTOMAKE_OPTIONS = nostdinc
+
 ragel_julia_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel $(LIBFSM_CPPFLAGS) $(LIBCOLM_CPPFLAGS)
 
 dist_ragel_julia_SOURCES = main.cc rlhc.c
