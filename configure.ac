@@ -504,13 +504,17 @@ COLM='$(abs_top_builddir)/src/colm'
 COLM_WRAP='$(abs_top_builddir)/src/colm-wrap'
 COLM_SHARE='$(abs_top_srcdir)/src/cgil'
 LIBCOLM_LA='$(abs_top_builddir)/src/libcolm.la'
+LIBCOLM_CPPFLAGS='-I$(abs_top_builddir)/src/include'
 LIBFSM_LA='$(abs_top_builddir)/src/libfsm/libfsm.la'
+LIBFSM_CPPFLAGS='-I$(abs_top_srcdir)/src'
 
 AC_SUBST(COLM)
 AC_SUBST(COLM_WRAP)
 AC_SUBST(COLM_SHARE)
 AC_SUBST(LIBCOLM_LA)
+AC_SUBST(LIBCOLM_CPPFLAGS)
 AC_SUBST(LIBFSM_LA)
+AC_SUBST(LIBFSM_CPPFLAGS)
 
 AC_CONFIG_HEADERS([src/config.h src/defs.h src/version.h])
 m4_foreach_w([header],
