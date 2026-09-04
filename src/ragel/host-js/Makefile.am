@@ -6,7 +6,8 @@ endif
 
 AUTOMAKE_OPTIONS = nostdinc
 
-ragel_js_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel $(LIBFSM_CPPFLAGS) $(LIBCOLM_CPPFLAGS)
+ragel_js_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel \
+	$(LIBFSM_CPPFLAGS) $(LIBCOLM_CPPFLAGS)
 
 dist_ragel_js_SOURCES = main.cc rlhc.c
 
@@ -16,6 +17,7 @@ nodist_ragel_js_SOURCES = \
 ragel_js_LDADD = $(LIBFSM_LA) $(LIBCOLM_LA) ../libragel.la
 
 BUILT_SOURCES = rlparse.c rlreduce.cc rlhc.c
+
 
 EXTRA_DIST = rlparse.lm CMakeLists.txt
 

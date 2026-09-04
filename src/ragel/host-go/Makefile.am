@@ -7,7 +7,8 @@ endif
 
 AUTOMAKE_OPTIONS = nostdinc
 
-ragel_go_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel $(LIBFSM_CPPFLAGS) $(LIBCOLM_CPPFLAGS)
+ragel_go_CPPFLAGS = -I$(top_srcdir)/src/aapl -I$(top_srcdir)/src/ragel \
+	$(LIBFSM_CPPFLAGS) $(LIBCOLM_CPPFLAGS)
 
 dist_ragel_go_SOURCES = main.cc rlhc.c
 
@@ -17,6 +18,7 @@ nodist_ragel_go_SOURCES = \
 ragel_go_LDADD = $(LIBFSM_LA) $(LIBCOLM_LA) ../libragel.la 
 
 BUILT_SOURCES = rlparse.c rlreduce.cc rlhc.c
+
 
 EXTRA_DIST = rlparse.lm out-go.lm CMakeLists.txt
 
