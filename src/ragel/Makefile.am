@@ -86,7 +86,7 @@ EXTRA_DIST = \
 	rlparse.kh \
 	rlparse.kl
 
-CLEANFILES = parse.c commit.cc rlhc.c
+CLEANFILES = version.h parse.pack parse.c rlreduce.cc commit.cc rlhc.c
 
 if WITH_RAGEL_KELBT
 CLEANFILES += rlscan.cc rlparse.cc rlparse.h 

@@ -59,7 +59,7 @@ EXTRA_DIST = \
 	tofrom1.rl tofrom2.rl tokstart1.rl union.rl url1.rl xmlcommon.rl xml.rl \
 	zlen1.rl
 
-CLEANFILES = working
+CLEANFILES = trans.c gentests
 
 # gentests runs in the build directory and takes its cases from there. Out of
 # tree they are in the source directory, so link them in first. check_DATA is
@@ -75,6 +75,7 @@ link-cases:
 	fi
 
 clean-local:
+	rm -Rf working
 	if test '$(builddir)' != '$(srcdir)'; then \
 		rm -f *.rl *.h include3; \
 	fi

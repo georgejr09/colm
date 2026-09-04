@@ -49,6 +49,6 @@ clean-local:
 check-local:
 	if test '$(builddir)' != '$(srcdir)'; then \
 		$(LN_S) -f '$(srcdir)/gentests' '$(builddir)'; \
-		cp -pR -f '$(srcdir)/case' '$(builddir)'; \
+		cp -pR -f '$(srcdir)/case' '$(builddir)' && chmod -R u+w case; \
 	fi
 	'$(top_srcdir)/test/runtests'

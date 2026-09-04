@@ -18,6 +18,7 @@ ragel_crack_LDADD = $(LIBFSM_LA) $(LIBCOLM_LA) ../libragel.la
 
 BUILT_SOURCES = rlparse.c rlreduce.cc rlhc.c
 
+CLEANFILES = rlparse.pack rlparse.c rlreduce.cc rlhc.c
 
 EXTRA_DIST = rlparse.lm CMakeLists.txt
 

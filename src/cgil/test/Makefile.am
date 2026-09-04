@@ -29,7 +29,7 @@ subject.sh: $(top_srcdir)/test/subject.sh.in Makefile
 runtests: runtests.in Makefile
 	@$(top_srcdir)/sedsubst $< $@ -w,+x $(SED_SUBST)
 
-CLEANFILES = subject.mk subject.sh
+CLEANFILES = subject.mk subject.sh runtests cgil-*.c
 
 cgil-c$(EXEEXT): $(top_srcdir)/src/cgil/rlhc-c.lm $(top_srcdir)/src/cgil/ril.lm $(SUBJ_COLM_BIN) 
 	$(SUBJ_COLM_BIN) -B '$(top_builddir)' -I $(top_srcdir)/src/cgil -o $@ $<
