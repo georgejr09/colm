@@ -23,7 +23,7 @@ EXTRA_DIST = rlparse.lm out-go.lm CMakeLists.txt
 LM_DEPS = ../ragel.lm ../rlreduce.lm
 
 rlparse.pack: rlparse.lm $(COLM) $(COLM_WRAP) $(LM_DEPS)
-	$(COLM_WRAP) -c -I .. -b rlparseGo -o $@ -p rlparse.c -m rlreduce.cc $<
+	$(COLM_WRAP) -c -I$(top_srcdir)/src/ragel -b rlparseGo -o $@ -p rlparse.c -m rlreduce.cc $<
 
 rlparse.c: rlparse.pack
 	$(COLM_WRAP) -o $@ $<

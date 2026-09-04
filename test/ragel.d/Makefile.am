@@ -18,7 +18,7 @@
 #   along with Ragel; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
 
-RAGEL_LM = ../../src/ragel
+RAGEL_LM = $(top_srcdir)/src/ragel
 
 TESTS = gentests
 
@@ -76,7 +76,7 @@ trans_LDADD = $(LIBCOLM_LA)
 trans_LDFLAGS = -static
 
 trans.c: trans.lm $(TRANS_DEPS) $(COLM)
-	$(COLM) -c -b trans_object -I$(RAGEL_LM) -I../../src/ragel/host-go -o $@ $<
+	$(COLM) -c -b trans_object -I$(srcdir) -I$(RAGEL_LM) -I$(RAGEL_LM)/host-go -o $@ $<
 
 gentests: gentests.sh Makefile
 	@$(top_srcdir)/sedsubst $< $@ -w,+x $(SED_SUBST)

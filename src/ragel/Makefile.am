@@ -98,7 +98,7 @@ RAGEL_LM = \
 	rlreduce.lm
 
 parse.pack: $(RAGEL_LM) $(COLM) $(COLM_WRAP)
-	$(COLM_WRAP) -c -b rlparseC -o $@ -p parse.c -m rlreduce.cc $<
+	$(COLM_WRAP) -c -I$(srcdir) -b rlparseC -o $@ -p parse.c -m rlreduce.cc $<
 
 rlreduce.cc: parse.pack
 	$(COLM_WRAP) -o $@ $<
