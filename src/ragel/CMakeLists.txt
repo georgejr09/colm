@@ -39,6 +39,8 @@ if(BUILD_STANDALONE)
 	# -static placed early in the link line, where it matters.
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		target_link_options(libragel PUBLIC -static)
+	elseif(MSVC)
+		# Static CRT is set globally via CMAKE_MSVC_RUNTIME_LIBRARY (top-level).
 	else()
 		message(FATAL_ERROR "Unsupported toolset for standalone build.")
 	endif()

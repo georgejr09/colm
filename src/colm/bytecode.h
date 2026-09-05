@@ -31,8 +31,8 @@
 extern "C" {
 #endif
 
-#if SIZEOF_LONG != 4 && SIZEOF_LONG != 8 
-	#error "SIZEOF_LONG contained an unexpected value"
+#if SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8 
+	#error "SIZEOF_VOID_P contained an unexpected value"
 #endif
 
 typedef unsigned long ulong;

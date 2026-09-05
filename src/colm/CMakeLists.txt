@@ -51,6 +51,24 @@ add_library(libcolm
 	bytecode.c program.c struct.c commit.c
 	print.c)
 
+#
+# Windows (MSVC / clang-cl): the colm runtime includes <unistd.h> and
+# <strings.h>, which MSVC does not ship. A minimal shim in win32-posix/
+# provides them (unistd.h maps execl -> _execl; strings.h maps strcasecmp ->
+# _stricmp). Also silence the CRT deprecation warnings for the POSIX names MSVC
+# does provide (strdup, fdopen). The C runtime sources are C99/C11, so set the
+# C standard; the compiler sources are C++.
+#
+if(MSVC)
+	target_include_directories(libcolm PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../win32-posix")
+	target_compile_definitions(libcolm PRIVATE _CRT_NONSTDC_NO_DEPRECATE _CRT_SECURE_NO_WARNINGS)
+endif()
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 target_include_directories(libcolm
 	PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>

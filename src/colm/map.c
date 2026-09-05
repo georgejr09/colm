@@ -24,6 +24,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <colm/pdarun.h>
 #include <colm/pool.h>
@@ -562,9 +563,9 @@ static long map_cmp( program_t *prg, map_t *map, const tree_t *tree1, const tree
 		return colm_cmp_tree( prg, tree1, tree2 );
 	}
 	else {
-		if ( (long)tree1 < (long)tree2 )
+		if ( (intptr_t)tree1 < (intptr_t)tree2 )
 			return -1;
-		else if ( (long)tree1 > (long)tree2)
+		else if ( (intptr_t)tree1 > (intptr_t)tree2)
 			return 1;
 		return 0;
 	}

@@ -132,6 +132,16 @@ option(BUILD_STANDALONE
 	${_default_build_standalone})
 
 #
+# A standalone build links the static C runtime. This must be set globally
+# (before any target is defined) so every object agrees on the runtime
+# library; a per-target /MT mixed with the default /MD produces an
+# lld-link "mismatch detected for 'RuntimeLibrary'" error.
+#
+if(BUILD_STANDALONE AND MSVC)
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+#
 # All executables land in one directory. The ragel driver locates the
 # host-language backends (ragel-c, ragel-go, ...) relative to its own argv[0],
 # so they must be siblings.

@@ -243,7 +243,7 @@ word_t str_atoo( head_t *str )
 head_t *int_to_str( program_t *prg, word_t i )
 {
 	char data[20];
-	sprintf( data, "%ld", i );
+	sprintf( data, "%llu", (unsigned long long)i );
 	return string_alloc_full( prg, data, strlen(data) );
 }
 

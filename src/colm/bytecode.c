@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -44,8 +45,8 @@
 #define TRUE_VAL  1
 #define FALSE_VAL 0
 
-#if SIZEOF_LONG != 4 && SIZEOF_LONG != 8 
-	#error "SIZEOF_LONG contained an unexpected value"
+#if SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8 
+	#error "SIZEOF_VOID_P contained an unexpected value"
 #endif
 
 #define read_byte( i ) do { \
@@ -68,7 +69,7 @@
 #endif
 
 /* There are better ways. */
-#if SIZEOF_LONG == 4
+#if SIZEOF_VOID_P == 4
 
 	#define read_type( type, i ) do { \
 		word_t _w; \
@@ -295,7 +296,7 @@ static void stream_undo_append_stream( program_t *prg, tree_t **sp, struct input
 static tree_t *stream_pull_bc( program_t *prg, tree_t **sp, struct pda_run *pda_run,
 		input_t *input, tree_t *length )
 {
-	long len = ((long)length);
+	intptr_t len = (intptr_t)length;
 	struct input_impl *impl = input_to_impl( input );
 	head_t *tokdata = colm_stream_pull( prg, sp, pda_run, impl, len );
 	return construct_string( prg, tokdata );
@@ -1886,7 +1887,7 @@ again:
 
 			value_t o2 = vm_pop_value();
 			value_t o1 = vm_pop_value();
-			value_t res = (long)o1 < (long)o2 ? TRUE_VAL : FALSE_VAL;
+			value_t res = o1 < o2 ? TRUE_VAL : FALSE_VAL;
 			vm_push_value( res );
 			break;
 		}
@@ -1907,7 +1908,7 @@ again:
 
 			value_t o2 = vm_pop_value();
 			value_t o1 = vm_pop_value();
-			value_t val = (long)o1 <= (long)o2 ? TRUE_VAL : FALSE_VAL;
+			value_t val = o1 <= o2 ? TRUE_VAL : FALSE_VAL;
 			vm_push_value( val );
 			break;
 		}
@@ -1928,7 +1929,7 @@ again:
 
 			value_t o2 = vm_pop_value();
 			value_t o1 = vm_pop_value();
-			value_t val = (long)o1 > (long)o2 ? TRUE_VAL : FALSE_VAL;
+			value_t val = o1 > o2 ? TRUE_VAL : FALSE_VAL;
 			vm_push_value( val );
 			break;
 		}
@@ -1950,7 +1951,7 @@ again:
 			value_t o2 = vm_pop_value();
 			value_t o1 = vm_pop_value();
 
-			value_t val = (long)o1 >= (long)o2 ? TRUE_VAL : FALSE_VAL;
+			value_t val = o1 >= o2 ? TRUE_VAL : FALSE_VAL;
 			vm_push_value( val );
 			break;
 		}

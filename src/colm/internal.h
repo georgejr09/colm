@@ -27,7 +27,7 @@
 
 typedef struct colm_struct struct_t;
 typedef struct colm_program program_t;
-typedef unsigned long value_t;
+typedef unsigned long long value_t;
 
 #endif /* _COLM_INTERNAL_H */
 

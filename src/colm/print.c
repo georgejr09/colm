@@ -451,7 +451,7 @@ void colm_print_term_tree( program_t *prg, tree_t **sp,
 	if ( kid->tree->id == LEL_ID_PTR ) {
 		char buf[INT_SZ];
 		out_indent( args, "#<", 2 );
-		sprintf( buf, "%lx", ((pointer_t*)kid->tree)->value );
+		sprintf( buf, "%llx", (unsigned long long)((pointer_t*)kid->tree)->value );
 		out_indent( args, buf, strlen(buf) );
 		out_indent( args, ">", 1 );
 	}
@@ -553,7 +553,7 @@ static void xml_term( program_t *prg, tree_t **sp,
 	/*child = */ tree_child( prg, kid->tree );
 	if ( kid->tree->id == LEL_ID_PTR ) {
 		char ptr[INT_SZ];
-		sprintf( ptr, "%lx", ((pointer_t*)kid->tree)->value );
+		sprintf( ptr, "%llx", (unsigned long long)((pointer_t*)kid->tree)->value );
 		print_args->out( print_args, ptr, strlen(ptr) );
 	}
 	else if ( kid->tree->id == LEL_ID_STR ) {

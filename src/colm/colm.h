@@ -44,7 +44,7 @@ struct indent_impl
 
 extern struct colm_sections colm_object;
 
-typedef unsigned long colm_value_t;
+typedef unsigned long long colm_value_t;
 typedef unsigned char colm_alph_t;
 
 struct colm_tree

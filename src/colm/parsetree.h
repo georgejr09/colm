@@ -50,8 +50,8 @@
 #define OP_LogicalOr 'o'
 #define OP_Deref 'd'
 
-#if SIZEOF_LONG != 4 && SIZEOF_LONG != 8 
-	#error "SIZEOF_LONG contained an unexpected value"
+#if SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8 
+	#error "SIZEOF_VOID_P contained an unexpected value"
 #endif
 
 struct NameInst;
@@ -93,7 +93,7 @@ struct CodeVect : public Vector<code_t>
 		append( (word>>8) & 0xff );
 		append( (word>>16) & 0xff );
 		append( (word>>24) & 0xff );
-		#if SIZEOF_LONG == 8
+		#if SIZEOF_VOID_P == 8
 		append( (word>>32) & 0xff );
 		append( (word>>40) & 0xff );
 		append( (word>>48) & 0xff );
@@ -122,7 +122,7 @@ struct CodeVect : public Vector<code_t>
 		insert( pos+1, (word>>8) & 0xff );
 		insert( pos+2, (word>>16) & 0xff );
 		insert( pos+3, (word>>24) & 0xff );
-		#if SIZEOF_LONG == 8
+		#if SIZEOF_VOID_P == 8
 		insert( pos+4, (word>>32) & 0xff );
 		insert( pos+5, (word>>40) & 0xff );
 		insert( pos+6, (word>>48) & 0xff );

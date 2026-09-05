@@ -70,8 +70,8 @@ struct fsm_tables
 	long num_action_switch;
 };
 
-#if SIZEOF_LONG != 4 && SIZEOF_LONG != 8 
-	#error "SIZEOF_LONG contained an unexpected value"
+#if SIZEOF_VOID_P != 4 && SIZEOF_VOID_P != 8 
+	#error "SIZEOF_VOID_P contained an unexpected value"
 #endif
 
 struct colm_execution;
@@ -415,7 +415,7 @@ inline static void append_word( struct rt_code_vect *vect, word_t word )
 	append_code_val( vect, (word>>8) & 0xff );
 	append_code_val( vect, (word>>16) & 0xff );
 	append_code_val( vect, (word>>24) & 0xff );
-	#if SIZEOF_LONG == 8
+	#if SIZEOF_VOID_P == 8
 	append_code_val( vect, (word>>32) & 0xff );
 	append_code_val( vect, (word>>40) & 0xff );
 	append_code_val( vect, (word>>48) & 0xff );
