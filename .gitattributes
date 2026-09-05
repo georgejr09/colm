@@ -1,0 +1,49 @@
+# Force LF line endings for all text files in this repository.
+#
+# The Colm/Ragel bootstrap lexers do not treat CR as whitespace, so a CRLF
+# checkout (git's default `core.autocrlf=true` on Windows) produces a parse
+# error at the first token of every .lm grammar. Pinning `eol=lf` here makes
+# the checkout byte-stable across machines and overrides any local autocrlf
+# setting, so the build works everywhere without per-machine configuration.
+
+# Source and build files.
+*.c    text eol=lf
+*.cc   text eol=lf
+*.cpp  text eol=lf
+*.h    text eol=lf
+*.hh   text eol=lf
+*.lm   text eol=lf
+*.rl   text eol=lf
+*.mk   text eol=lf
+*.am   text eol=lf
+*.ac   text eol=lf
+*.sh   text eol=lf
+*.awk  text eol=lf
+*.vim  text eol=lf
+
+# Documentation and data.
+*.txt  text eol=lf
+*.md   text eol=lf
+*.adoc text eol=lf
+*.tex  text eol=lf
+*.html text eol=lf
+*.fig  text eol=lf
+*.exp  text eol=lf
+*.in   text eol=lf
+*.ri   text eol=lf
+*.kl   text eol=lf
+*.kh   text eol=lf
+
+# Generated host-language examples (text, keep LF).
+*.go     text eol=lf
+*.rb     text eol=lf
+*.ruby   text eol=lf
+*.rust   text eol=lf
+*.zig    text eol=lf
+*.d      text eol=lf
+*.java   text eol=lf
+*.js     text eol=lf
+*.crack  text eol=lf
+*.csharp text eol=lf
+*.julia  text eol=lf
+*.ocaml  text eol=lf
