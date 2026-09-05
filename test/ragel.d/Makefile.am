@@ -18,11 +18,7 @@
 #   along with Ragel; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
 
-COLM_BIN = @COLM@
-RAGEL_LM = ../../src/ragel
-
-COLM_xCPPFLAGS = -I../../src/include
-COLM_xLDADD = ../../src/libcolm.la
+RAGEL_LM = $(top_srcdir)/src/ragel
 
 TESTS = gentests
 
@@ -64,7 +60,26 @@ EXTRA_DIST = \
 	tofrom1.rl tofrom2.rl tokstart1.rl union.rl url1.rl xmlcommon.rl xml.rl \
 	zlen1.rl
 
-CLEANFILES = working
+CLEANFILES = trans.c gentests
+
+# gentests runs in the build directory and takes its cases from there. Out of
+# tree they are in the source directory, so link them in first. check_DATA is
+# built before check-TESTS runs.
+check_DATA = link-cases
+
+.PHONY: link-cases
+link-cases:
+	if test '$(builddir)' != '$(srcdir)'; then \
+		$(LN_S) -f '$(srcdir)/'*.rl '$(srcdir)/'*.h '$(builddir)'; \
+		test -L include3 && rm -f include3; \
+		$(LN_S) -f '$(srcdir)/include3' '$(builddir)'; \
+	fi
+
+clean-local:
+	rm -Rf working
+	if test '$(builddir)' != '$(srcdir)'; then \
+		rm -f *.rl *.h include3; \
+	fi
 
 TRANS_DEPS = \
 	$(RAGEL_LM)/ragel.lm \
@@ -75,13 +90,13 @@ TRANS_DEPS = \
 	trans-ocaml.lm trans-ruby.lm \
 	trans-rust.lm trans-zig.lm
 
-trans_CPPFLAGS = $(COLM_xCPPFLAGS)
+trans_CPPFLAGS = $(LIBCOLM_CPPFLAGS)
 trans_SOURCES = trans.c main.c
-trans_LDADD = $(COLM_xLDADD)
+trans_LDADD = $(LIBCOLM_LA)
 trans_LDFLAGS = -static
 
-trans.c: trans.lm $(TRANS_DEPS) $(COLM_BIN)
-	$(COLM_BIN) -c -b trans_object -I$(RAGEL_LM) -I../../src/ragel/host-go -o $@ $<
+trans.c: trans.lm $(TRANS_DEPS) $(COLM)
+	$(COLM) -c -b trans_object -I$(srcdir) -I$(RAGEL_LM) -I$(RAGEL_LM)/host-go -o $@ $<
 
 gentests: gentests.sh Makefile
 	@$(top_srcdir)/sedsubst $< $@ -w,+x $(SED_SUBST)

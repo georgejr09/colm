@@ -162,7 +162,7 @@ endif()
 
 #
 # Configuration checks. These mirror the ones performed by configure.ac and
-# feed src/config.h.cmake.in and src/defs.h.cmake.in.
+# feed src/colm/config.h.cmake.in and src/colm/defs.h.cmake.in.
 #
 include(CheckTypeSize)
 check_type_size("int" SIZEOF_INT)
@@ -183,7 +183,7 @@ if("${CMAKE_BUILD_TYPE}" MATCHES "[Dd][Ee][Bb]")
 	set(DEBUG 1)
 endif()
 
-# Definitions needed by src/main.cc when it drives the C compiler.
+# Definitions needed by src/colm/main.cc when it drives the C compiler.
 set(common_COMPILE_DEFINITIONS
 	PREFIX="${CMAKE_INSTALL_PREFIX}"
 	INCLUDEDIR="${CMAKE_INSTALL_FULL_INCLUDEDIR}"
