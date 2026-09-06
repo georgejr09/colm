@@ -665,14 +665,14 @@ void Goto::TARGS( ostream &ret, bool inFinish, int targState )
 
 void Goto::NEXT( ostream &ret, int nextDest, bool inFinish )
 {
-	ret << vCS() << " = " << nextDest << ";";
+	ret << OPEN_GEN_BLOCK() << vCS() << " = " << nextDest << ";" << CLOSE_GEN_BLOCK();
 }
 
 void Goto::NEXT_EXPR( ostream &ret, GenInlineItem *ilItem, bool inFinish )
 {
-	ret << vCS() << " = (";
+	ret << OPEN_GEN_BLOCK() << vCS() << " = (";
 	INLINE_LIST( ret, ilItem->children, 0, inFinish, false );
-	ret << ");";
+	ret << ");" << CLOSE_GEN_BLOCK();
 }
 
 void Goto::CALL( ostream &ret, int callDest, int targState, bool inFinish )

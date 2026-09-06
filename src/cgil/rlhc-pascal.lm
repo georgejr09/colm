@@ -65,22 +65,58 @@ namespace pascal_gen
 
 	void tok_list( TL: host::tok* )
 	{
+		Prev: str = ""
+		First: bool = true
+		# The last two non-whitespace raw token texts. Used to decide whether a
+		# following `fc` gen-expr (`={( deref( data, p ))}=`) is an operand
+		# (needs `Ord(...)`) or a bare value (`comm := fc`). The host lexer
+		# emits single-char `Any` tokens, so `:=` is two tokens (`:` then `=`).
+		PrevNonWs: str = ""
+		PrevPrevNonWs: str = ""
 		for Tok: host::tok in repeat(TL) {
 			switch Tok
 			case Stmt {
+				# Emit `begin ... end` WITHOUT a trailing `;`. The `;` is
+				# added between consecutive Stmt tokens (below) or by the
+				# caller. A trailing `;` here would break `if/then/else`
+				# when a `fcall`/`fret`/`fgoto`/`fhold` (lowered to this
+				# Stmt) sits in the `then` branch.
+				if !First {
+					<<	";"
+				}
 				<<	"begin
 					"	[stmt_list( StmtList )]
-					"end;
+					"end
+				First = false
+				Prev = ""
 			}
 			case Expr {
-				<<	"([expr( Expr )])"
+				# The `fc` gen-expr. It is a bare value only when it is the
+				# RHS of a `:=` assignment (`comm := fc`); otherwise it is an
+				# operand of an operator and must be `Ord(...)`-wrapped.
+				InArith: bool = true
+				if PrevPrevNonWs == ":" && PrevNonWs == "=" {
+					InArith = false
+				}
+				<<	"([expr( Expr, InArith )])"
+				Prev = ""
 			}
 			case Escape {
 				Str: str = $escape
 				<<	"[Str.suffix( 1 )]"
+				Prev = ""
 			}
 			default {
+				# Emit the raw `Any` token verbatim. The C++ codegen now emits
+				# Pascal operators (`:=`, `=`) directly, so no translation is
+				# needed here.
 				<<	[Tok]
+				Prev = $Tok
+				# Track the last two non-whitespace tokens for the `fc` decision.
+				if $Tok != " " && $Tok != "\t" && $Tok != "\n" {
+					PrevPrevNonWs = PrevNonWs
+					PrevNonWs = $Tok
+				}
 			}
 		}
 	}
@@ -112,8 +148,15 @@ namespace pascal_gen
 				<<	[Host.prefix( Idx )]
 				if GblLabels->length > 0 {
 					<<	"label"
+					First: bool = true
 					for L: str in GblLabels {
-						<<	"	[L],"
+						if First {
+							First = false
+							<<	"	[L]"
+						}
+						else {
+							<<	", [L]"
+						}
 					}
 					<<	";\n"
 				}
@@ -158,7 +201,21 @@ namespace pascal_gen
 		}
 	}
 
-	void expr_factor( ExprFactor: expr_factor )
+	# Emit a `deref` (the `fc` current-char access). FPC does NOT auto-promote
+	# Char in arithmetic (`Char - Char` is a type error), so in an arithmetic
+	# operand the deref is wrapped in `Ord(...)` (Byte); as a bare value it is
+	# emitted as `base[expr]` (Char) so `comm := fc` assigns a Char.
+	void deref_emit( Base: expr, Index: expr, InArith: bool )
+	{
+		if InArith {
+			<<	"Ord([expr( Base, false )]\[[expr( Index, false )]\])"
+		}
+		else {
+			<<	"[expr( Base, false )]\[[expr( Index, false )]\]"
+		}
+	}
+
+	void expr_factor( ExprFactor: expr_factor, InArith: bool )
 	{
 		switch ExprFactor
 		case [EH: embedded_host]
@@ -167,23 +224,23 @@ namespace pascal_gen
 		}
 		case Paren
 		{
-			<<	"([expr( expr )])"
+			<<	"([expr( expr, InArith )])"
 		}
 		case ArraySub
 		{
-			<<	"[expr_factor(EF)]\[[expr( expr )]\]"
+			<<	"[expr_factor(EF, InArith)]\[[expr( expr, InArith )]\]"
 		}
 		case ArraySubField
 		{
-			<<	"[ident]\[[expr( expr )]\].[Field]"
+			<<	"[ident]\[[expr( expr, InArith )]\].[Field]"
 		}
 		case Offset
 		{
-			<<	"[expr( expr )]"
+			<<	"[expr( expr, InArith )]"
 		}
 		case Deref
 		{
-			<<	"Ord([base]\[[expr( expr )]\])"
+			deref_emit( base, expr, InArith )
 		}
 		case True
 		{
@@ -210,7 +267,7 @@ namespace pascal_gen
 		case [E1: embedded_host `-> E2: expr_factor]
 		{
 			embedded_host( E1 )
-			expr_factor( E2 )
+			expr_factor( E2, InArith )
 		}
 		default {
 			# Catches cases not specified
@@ -227,11 +284,11 @@ namespace pascal_gen
 		}
 		case [LV: lvalue O: `[ TL: expr C: `]]
 		{
-			<<	[lvalue(LV) O expr( TL ) C]
+			<<	[lvalue(LV) O expr( TL, false ) C]
 		}
 		case [I: ident `[ E: expr `] `. F: ident]
 		{
-			<<	"[I]\[[ expr( E )]\].[F]
+			<<	"[I]\[[ expr( E, false )]\].[F]
 		}
 		case [E1: embedded_host `-> E2: lvalue]
 		{
@@ -244,63 +301,63 @@ namespace pascal_gen
 		}
 	}
 
-	void expr_factor_op( ExprFactorOp: expr_factor_op )
+	void expr_factor_op( ExprFactorOp: expr_factor_op, InArith: bool )
 	{
 		switch ExprFactorOp
 		case [B: `! expr_factor_op]
 		{
-			<<	['not ' expr_factor_op( _expr_factor_op )]
+			<<	['not ' expr_factor_op( _expr_factor_op, InArith )]
 		}
 		case [T: `~ expr_factor_op]
 		{
-			<<	['not ' expr_factor_op( _expr_factor_op )]
+			<<	['not ' expr_factor_op( _expr_factor_op, InArith )]
 		}
 		case [`cast `( T: type `) F: expr_factor_op]
 		{
-			<<	"[type( T )]( [expr_factor_op( F )] )"
+			<<	"[type( T )]( [expr_factor_op( F, InArith )] )"
 		}
 		case [expr_factor]
 		{
-			<<	[expr_factor( expr_factor )]
+			<<	[expr_factor( expr_factor, InArith )]
 		}
 	}
 
-	void expr_bitwise( ExprBitwise: expr_bitwise )
+	void expr_bitwise( ExprBitwise: expr_bitwise, InArith: bool )
 	{
 		switch ExprBitwise
 		case [expr_bitwise A: `& expr_factor_op]
 		{
-			<<	[expr_bitwise( _expr_bitwise ) ' and ' expr_factor_op( expr_factor_op )]
+			<<	[expr_bitwise( _expr_bitwise, true ) ' and ' expr_factor_op( expr_factor_op, true )]
 		}
 		case [expr_factor_op]
 		{
-			<<	[expr_factor_op( expr_factor_op )]
+			<<	[expr_factor_op( expr_factor_op, InArith )]
 		}
 	}
 
-	void expr_mult( ExprMult: expr_mult )
+	void expr_mult( ExprMult: expr_mult, InArith: bool )
 	{
 		switch ExprMult
 		case [expr_mult T: `* expr_bitwise]
 		{
-			<<	[expr_mult( _expr_mult ) T expr_bitwise( expr_bitwise )]
+			<<	[expr_mult( _expr_mult, true ) T expr_bitwise( expr_bitwise, true )]
 		}
 		case [expr_bitwise]
 		{
-			<<	[expr_bitwise( expr_bitwise )]
+			<<	[expr_bitwise( expr_bitwise, InArith )]
 		}
 	}
 
-	void expr_add( ExprAdd: expr_add )
+	void expr_add( ExprAdd: expr_add, InArith: bool )
 	{
 		switch ExprAdd
 		case [expr_add Op: add_op expr_mult]
 		{
-			<<	[expr_add( _expr_add ) Op expr_mult( expr_mult )]
+			<<	[expr_add( _expr_add, true ) Op expr_mult( expr_mult, true )]
 		}
 		case [expr_mult]
 		{
-			<<	[expr_mult( expr_mult )]
+			<<	[expr_mult( expr_mult, InArith )]
 		}
 	}
 
@@ -330,48 +387,48 @@ namespace pascal_gen
 			<<	"or"
 	}
 
-	void expr_shift( ExprShift: expr_shift )
+	void expr_shift( ExprShift: expr_shift, InArith: bool )
 	{
 		switch ExprShift
 		case [expr_shift Op: shift_op expr_add]
 		{
-			<<	[expr_shift( _expr_shift ) ' ' shift_op_pascal( Op ) ' ' expr_add( expr_add )]
+			<<	[expr_shift( _expr_shift, true ) ' ' shift_op_pascal( Op ) ' ' expr_add( expr_add, true )]
 		}
 		case [expr_add]
 		{
-			<<	[expr_add( expr_add )]
+			<<	[expr_add( expr_add, InArith )]
 		}
 	}
 
-	void expr_test( ExprTest: expr_test )
+	void expr_test( ExprTest: expr_test, InArith: bool )
 	{
 		switch ExprTest
 		case [expr_test Op: logical_op R: expr_test]
 		{
-			<<	['(' expr_test( _expr_test ) ') ' logical_op_pascal( Op ) ' (' expr_test( R ) ')']
+			<<	['(' expr_test( _expr_test, true ) ') ' logical_op_pascal( Op ) ' (' expr_test( R, true ) ')']
 		}
 		case [expr_cmp]
 		{
-			expr_cmp( expr_cmp )
+			expr_cmp( expr_cmp, InArith )
 		}
 	}
 
-	void expr_cmp( ExprCmp: expr_cmp )
+	void expr_cmp( ExprCmp: expr_cmp, InArith: bool )
 	{
 		switch ExprCmp
 		case [expr_cmp Op: test_op expr_shift]
 		{
-			<<	[expr_cmp( _expr_cmp ) ' ' test_op_pascal( Op ) ' ' expr_shift( expr_shift )]
+			<<	[expr_cmp( _expr_cmp, true ) ' ' test_op_pascal( Op ) ' ' expr_shift( expr_shift, true )]
 		}
 		case [expr_shift]
 		{
-			<<	[expr_shift( expr_shift )]
+			<<	[expr_shift( expr_shift, InArith )]
 		}
 	}
 
-	void expr( Expr: expr )
+	void expr( Expr: expr, InArith: bool )
 	{
-		expr_test( Expr.expr_test )
+		expr_test( Expr.expr_test, InArith )
 	}
 
 	void type( Type: type )
@@ -486,7 +543,7 @@ namespace pascal_gen
 				ElseIfClauseList: else_if_clause*
 				ElseClauseOpt: else_clause?
 		] {
-			<<	"if [expr(IfExpr)] then
+			<<	"if [expr(IfExpr, false)] then
 				"begin
 				"	[stmt(IfStmt)]
 				"end
@@ -496,7 +553,7 @@ namespace pascal_gen
 				match ElseIfClause
 					[`else `if `( ElseIfExpr: expr `) ElseIfStmt: stmt]
 
-				<<	"else if [expr(ElseIfExpr)] then
+				<<	"else if [expr(ElseIfExpr, false)] then
 					"begin
 					"	[stmt(ElseIfStmt)]
 					"end
@@ -513,14 +570,14 @@ namespace pascal_gen
 			<<	";
 		}
 		case [`while `( WhileExpr: expr `) WhileStmt: stmt] {
-			<<	"while [expr(WhileExpr)] do
+			<<	"while [expr(WhileExpr, false)] do
 				"	[stmt(WhileStmt)]
 		}
 		case [M: match_stmt] {
-			<<	"case [expr(M.E)] of
+			<<	"case [expr(M.E, false)] of
 
 			for PB: pat_block in repeat( M.P ) {
-				<<	"[expr( PB.expr )]:
+				<<	"[expr( PB.expr, false )]:
 					"[stmt_list( PB._repeat_stmt )]
 			}
 
@@ -532,12 +589,17 @@ namespace pascal_gen
 			<<	"end;
 		}
 		case [`switch `( SwitchExpr: expr `) `{ StmtList: stmt* `}] {
-			<<	"case [expr(SwitchExpr)] of
+			# The switch expression is the current char `deref(data, p)` (a
+			# Char) in the goto-driven codegen, and the case labels are
+			# integers (`u(43)`). Emit it in arithmetic context so the `fc`
+			# deref is `Ord(...)`-wrapped to an integer. For integer derefs
+			# (`deref(_atoi_actions, _acts)`) `Ord(...)` is a harmless no-op.
+			<<	"case [expr(SwitchExpr, true)] of
 				"	[switch_body( StmtList )]
 				"end;
 		}
 		case [ES: expr_stmt] {
-			<<	"[expr(ES.expr)];
+			<<	"[expr(ES.expr, false)];
 		}
 		case [B: block] {
 			<<	"begin
@@ -552,7 +614,7 @@ namespace pascal_gen
 			if match OptConst [`const] {
 				<<	"const [Ident]: [type(Type)]"
 				if match OptInit [`= Init: expr] {
-					<<	" = [expr(Init)]"
+					<<	" = [expr(Init, false)]"
 				}
 				<<	";"
 			}
@@ -560,7 +622,7 @@ namespace pascal_gen
 				# The var declaration is hoisted by the pre-scan (collect_vars);
 				# here we only emit the initializer assignment.
 				if match OptInit [`= Init: expr] {
-					<<	"[Ident] := [expr(Init)];"
+					<<	"[Ident] := [expr(Init, false)];"
 				}
 			}
 		}
@@ -577,7 +639,7 @@ namespace pascal_gen
 			# The var declaration is hoisted by the pre-scan (collect_vars);
 			# here we only emit the initializer assignment.
 			if match Index.opt_init [`= expr] {
-				<<	"[Index.ident] := [expr(Index.opt_init.expr)];"
+				<<	"[Index.ident] := [expr(Index.opt_init.expr, false)];"
 			}
 		}
 		case [GL: goto_label]
@@ -598,7 +660,7 @@ namespace pascal_gen
 		}
 		case [CB: case_block]
 		{
-			<<	"[expr( CB.expr )]:
+			<<	"[expr( CB.expr, false )]:
 				"[stmt_list( CB._repeat_stmt )]
 		}
 		case [DB: default_block]
@@ -608,16 +670,16 @@ namespace pascal_gen
 		}
 		case [CL: case_label]
 		{
-			<<	"[expr( CL.expr )]:
+			<<	"[expr( CL.expr, false )]:
 		}
 		case [AS: assign_stmt]
 		{
 			if match AS.assign_op [`=]
-				<<	"[lvalue(AS.LValue)] := [expr(AS.expr)];
+				<<	"[lvalue(AS.LValue)] := [expr(AS.expr, false)];
 			else if match AS.assign_op [`+=]
-				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] + [expr(AS.expr)];
+				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] + [expr(AS.expr, false)];
 			else if match AS.assign_op [`-=]
-				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] - [expr(AS.expr)];
+				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] - [expr(AS.expr, false)];
 		}
 		default {
 			# catches unspecified cases
@@ -644,14 +706,14 @@ namespace pascal_gen
 			{
 				if InCase
 					<<	"end;
-				<<	"[expr( CL.expr )]: begin
+				<<	"[expr( CL.expr, false )]: begin
 				InCase = true
 			}
 			case [CB: case_block]
 			{
 				if InCase
 					<<	"end;
-				<<	"[expr( CB.expr )]: begin
+				<<	"[expr( CB.expr, false )]: begin
 					"[stmt_list( CB._repeat_stmt )]
 				InCase = true
 			}

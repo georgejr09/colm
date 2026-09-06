@@ -36,6 +36,7 @@ struct Tables
 
 		pa( "_pa" ),
 		klen( "_klen" ),
+		key( "_key" ),
 		ckeys( "_ckeys" ),
 		cekeys( "_cekeys" ),
 		trans( "_trans" ),
@@ -94,6 +95,7 @@ struct Tables
 
 	Variable pa;
 	Variable klen;
+	Variable key;
 	Variable ckeys;
 	Variable cekeys;
 	Variable trans;

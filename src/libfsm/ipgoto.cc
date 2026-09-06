@@ -197,14 +197,14 @@ void IpGoto::NRET( ostream &ret, bool inFinish )
 
 void IpGoto::NEXT( ostream &ret, int nextDest, bool inFinish )
 {
-	ret << vCS() << " = " << nextDest << ";";
+	ret << OPEN_GEN_BLOCK() << vCS() << " = " << nextDest << ";" << CLOSE_GEN_BLOCK();
 }
 
 void IpGoto::NEXT_EXPR( ostream &ret, GenInlineItem *ilItem, bool inFinish )
 {
-	ret << vCS() << " = (";
+	ret << OPEN_GEN_BLOCK() << vCS() << " = (";
 	INLINE_LIST( ret, ilItem->children, 0, inFinish, false );
-	ret << ");";
+	ret << ");" << CLOSE_GEN_BLOCK();
 }
 
 void IpGoto::CURS( ostream &ret, bool inFinish )

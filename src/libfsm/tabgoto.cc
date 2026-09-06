@@ -169,6 +169,7 @@ void TabGoto::writeExec()
 	DECLARE( INT(), cpc );
 	DECLARE( INT(), nbreak );
 	DECLARE( INT(), klen );
+	DECLARE( ALPH_TYPE(), key );
 	DECLARE( INDEX( ARR_TYPE( condKeys ) ), ckeys );
 	DECLARE( INDEX( ARR_TYPE( eofCondKeys ) ), cekeys );
 	DECLARE( UINT(), trans, " = 0" );
