@@ -138,7 +138,7 @@ void InputData::createOutputStream()
 void InputData::openOutput()
 {
 	if ( outFilter != 0 ) {
-		outFilter->open( outputFileName, ios::out|ios::trunc );
+		outFilter->open( outputFileName, ios::out|ios::trunc|ios::binary );
 		if ( !outFilter->is_open() ) {
 			error() << "error opening " << outputFileName << " for writing" << endl;
 			abortCompile( 1 );

@@ -1,0 +1,810 @@
+include 'ril.lm'
+
+namespace pascal_out
+
+	token _IN_ /''/
+	token _EX_ /''/
+
+	lex
+		token comment /
+			'//' any* :> '\n' |
+			'{' any* :>> '}' |
+			'(*' any* :>> '*)'
+		/
+
+		token id
+			/( [a-zA-Z_] | 0x80..0xff ) ( [a-zA-Z_0-9] | 0x80..0xff )*/
+
+		token number /
+			[0-9]+
+		/
+
+		token symbol /
+			'!' | '#' | '$' | '%' | '&' | '(' | ')' | '*' |
+			'+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' |
+			'=' | '>' | '?' | '@' | '[' | ']' | '^' | '|' |
+			'~' /
+
+		literal `{ `}
+
+		token string /
+				"'" ( [^'] | "''" ) * "'" |
+				'"' ( [^"\\] | '\\' any ) * '"'
+			/
+
+		ignore
+			/[ \t\v\f\r\n]+/
+	end
+
+	def item
+		[comment]
+	|	[id]
+	|	[number]
+	|	[symbol]
+	|	[string]
+	|	[`{ _IN_ item* _EX_ `} ]
+
+	def pascal_out
+		[_IN_ _EX_ item*]
+end
+
+namespace pascal_gen
+	global _: parser<pascal_out::pascal_out>
+
+	# Collect variable declarations so they can be emitted in a single `var`
+	# section (FPC requires `var` at the procedure level, not inline).
+	struct var_decl
+		Ident: str
+		Type: type
+		IsIndex: bool
+	end
+	global GblVars: list<var_decl> = new list<var_decl>()
+	global GblVarEmitted: bool = false
+	global GblLabels: list<str> = new list<str>()
+	global GblHostBuf: str = ""
+
+	void tok_list( TL: host::tok* )
+	{
+		for Tok: host::tok in repeat(TL) {
+			switch Tok
+			case Stmt {
+				<<	"begin
+					"	[stmt_list( StmtList )]
+					"end;
+			}
+			case Expr {
+				<<	"([expr( Expr )])"
+			}
+			case Escape {
+				Str: str = $escape
+				<<	"[Str.suffix( 1 )]"
+			}
+			default {
+				<<	[Tok]
+			}
+		}
+	}
+
+	# Emit the bare host code (the `@{...}@` block), injecting the hoisted
+	# var+label sections right before the function's `begin` keyword.
+	void bare_host( TL: host::tok* )
+	{
+		Host: str = ""
+		for Tok: host::tok in repeat(TL) {
+			Host = Host + $Tok
+		}
+
+		if !GblVarEmitted {
+			Idx: int = 0
+			Found: bool = false
+			I: int = 0
+			Len: int = Host.length
+			while ( I < Len - 4 ) {
+				if prefix( suffix( Host, I ), 5 ) == "begin" {
+					Idx = I
+					Found = true
+					break
+				}
+				I = I + 1
+			}
+			if Found {
+				GblVarEmitted = true
+				<<	[Host.prefix( Idx )]
+				if GblLabels->length > 0 {
+					<<	"label"
+					for L: str in GblLabels {
+						<<	"	[L],"
+					}
+					<<	";\n"
+				}
+				if GblVars->length > 0 {
+					<<	"var\n"
+					for VD: var_decl in GblVars {
+						if VD->IsIndex {
+							<<	"	[VD->Ident]: integer;\n"
+						}
+						else {
+							<<	"	[VD->Ident]: [type(VD->Type)];\n"
+						}
+					}
+				}
+				<<	[Host.suffix( Idx )]
+			}
+			else {
+				<<	[Host]
+			}
+		}
+		else {
+			<<	[Host]
+		}
+	}
+
+	void embedded_host( EmbeddedHost: embedded_host )
+	{
+		switch EmbeddedHost
+		case Expr
+		{
+			<<	"([tok_list( TL )])"
+		}
+		case Stmt
+		{
+			<<	"begin
+				"	[tok_list( TL )]
+				"end;
+		}
+		case Bare
+		{
+			<<	[bare_host( TL )]
+		}
+	}
+
+	void expr_factor( ExprFactor: expr_factor )
+	{
+		switch ExprFactor
+		case [EH: embedded_host]
+		{
+			<<	[embedded_host( EH )]
+		}
+		case Paren
+		{
+			<<	"([expr( expr )])"
+		}
+		case ArraySub
+		{
+			<<	"[expr_factor(EF)]\[[expr( expr )]\]"
+		}
+		case ArraySubField
+		{
+			<<	"[ident]\[[expr( expr )]\].[Field]"
+		}
+		case Offset
+		{
+			<<	"[expr( expr )]"
+		}
+		case Deref
+		{
+			<<	"Ord([base]\[[expr( expr )]\])"
+		}
+		case True
+		{
+			<<	"true"
+		}
+		case False
+		{
+			<<	"false"
+		}
+		case Nil
+		{
+			<<	"0"
+		}
+		case [Number: number]
+		{
+			number( Number )
+		}
+		case [Hex: hex_number]
+		{
+			# C hex literal 0x1F -> Pascal $1F
+			H: str = $Hex
+			<<	"$[H.suffix( 2 )]"
+		}
+		case [E1: embedded_host `-> E2: expr_factor]
+		{
+			embedded_host( E1 )
+			expr_factor( E2 )
+		}
+		default {
+			# Catches cases not specified
+			<<	[ExprFactor]
+		}
+	}
+
+	void lvalue( ExprFactor: lvalue )
+	{
+		switch ExprFactor
+		case [EH: embedded_host]
+		{
+			<<	[embedded_host( EH )]
+		}
+		case [LV: lvalue O: `[ TL: expr C: `]]
+		{
+			<<	[lvalue(LV) O expr( TL ) C]
+		}
+		case [I: ident `[ E: expr `] `. F: ident]
+		{
+			<<	"[I]\[[ expr( E )]\].[F]
+		}
+		case [E1: embedded_host `-> E2: lvalue]
+		{
+			embedded_host( E1 )
+			lvalue( E2 )
+		}
+		default {
+			# Catches cases not specified
+			<<	[ExprFactor]
+		}
+	}
+
+	void expr_factor_op( ExprFactorOp: expr_factor_op )
+	{
+		switch ExprFactorOp
+		case [B: `! expr_factor_op]
+		{
+			<<	['not ' expr_factor_op( _expr_factor_op )]
+		}
+		case [T: `~ expr_factor_op]
+		{
+			<<	['not ' expr_factor_op( _expr_factor_op )]
+		}
+		case [`cast `( T: type `) F: expr_factor_op]
+		{
+			<<	"[type( T )]( [expr_factor_op( F )] )"
+		}
+		case [expr_factor]
+		{
+			<<	[expr_factor( expr_factor )]
+		}
+	}
+
+	void expr_bitwise( ExprBitwise: expr_bitwise )
+	{
+		switch ExprBitwise
+		case [expr_bitwise A: `& expr_factor_op]
+		{
+			<<	[expr_bitwise( _expr_bitwise ) ' and ' expr_factor_op( expr_factor_op )]
+		}
+		case [expr_factor_op]
+		{
+			<<	[expr_factor_op( expr_factor_op )]
+		}
+	}
+
+	void expr_mult( ExprMult: expr_mult )
+	{
+		switch ExprMult
+		case [expr_mult T: `* expr_bitwise]
+		{
+			<<	[expr_mult( _expr_mult ) T expr_bitwise( expr_bitwise )]
+		}
+		case [expr_bitwise]
+		{
+			<<	[expr_bitwise( expr_bitwise )]
+		}
+	}
+
+	void expr_add( ExprAdd: expr_add )
+	{
+		switch ExprAdd
+		case [expr_add Op: add_op expr_mult]
+		{
+			<<	[expr_add( _expr_add ) Op expr_mult( expr_mult )]
+		}
+		case [expr_mult]
+		{
+			<<	[expr_mult( expr_mult )]
+		}
+	}
+
+	void shift_op_pascal( Op: shift_op )
+	{
+		if match Op [`<<]
+			<<	"shl"
+		else
+			<<	"shr"
+	}
+
+	void test_op_pascal( Op: test_op )
+	{
+		if match Op [`==]
+			<<	"="
+		else if match Op [`!=]
+			<<	"<>"
+		else
+			<<	[Op]
+	}
+
+	void logical_op_pascal( Op: logical_op )
+	{
+		if match Op [`&&]
+			<<	"and"
+		else
+			<<	"or"
+	}
+
+	void expr_shift( ExprShift: expr_shift )
+	{
+		switch ExprShift
+		case [expr_shift Op: shift_op expr_add]
+		{
+			<<	[expr_shift( _expr_shift ) ' ' shift_op_pascal( Op ) ' ' expr_add( expr_add )]
+		}
+		case [expr_add]
+		{
+			<<	[expr_add( expr_add )]
+		}
+	}
+
+	void expr_test( ExprTest: expr_test )
+	{
+		switch ExprTest
+		case [expr_test Op: logical_op R: expr_test]
+		{
+			<<	['(' expr_test( _expr_test ) ') ' logical_op_pascal( Op ) ' (' expr_test( R ) ')']
+		}
+		case [expr_cmp]
+		{
+			expr_cmp( expr_cmp )
+		}
+	}
+
+	void expr_cmp( ExprCmp: expr_cmp )
+	{
+		switch ExprCmp
+		case [expr_cmp Op: test_op expr_shift]
+		{
+			<<	[expr_cmp( _expr_cmp ) ' ' test_op_pascal( Op ) ' ' expr_shift( expr_shift )]
+		}
+		case [expr_shift]
+		{
+			<<	[expr_shift( expr_shift )]
+		}
+	}
+
+	void expr( Expr: expr )
+	{
+		expr_test( Expr.expr_test )
+	}
+
+	void type( Type: type )
+	{
+		switch Type
+		case S8
+			<<	['shortint']
+		case S16
+			<<	['smallint']
+		case S32
+			<<	['integer']
+		case S64
+			<<	['int64']
+		case S128
+			<<	['int64']
+		case "int"
+			<<	['integer']
+		case "uint"
+			<<	['cardinal']
+		case "char"
+			<<	['char']
+		case "long"
+			<<	['int64']
+		case "unsigned int"
+			<<	['cardinal']
+		case "signed char"
+			<<	['shortint']
+		case "unsigned char"
+			<<	['byte']
+		case "long long"
+			<<	['int64']
+		case "unsigned long"
+			<<	['cardinal']
+		case "short"
+			<<	['smallint']
+		case "unsigned short"
+			<<	['word']
+		default
+			<<	[Type]
+	}
+
+	void number( Number: number )
+	{
+		switch Number
+		case Unsigned
+			<<	"[uint]"
+		case Char
+			<<	"[uint]"
+		default
+			<<	[Number]
+	}
+
+	void num_list( NumList: num_list )
+	{
+		First: bool = true
+		for Number: number in NumList {
+			if First {
+				First = false
+				<<	"[number( Number )]"
+			}
+			else {
+				<<	", [number( Number )]"
+			}
+		}
+	}
+
+	# Emit a num_list where each value is a char literal (Chr(n)) — used for
+	# `array char` tables (alphtype char).
+	void num_list_char( NumList: num_list )
+	{
+		First: bool = true
+		for Number: number in NumList {
+			if First {
+				First = false
+				<<	"Chr([number( Number )])"
+			}
+			else {
+				<<	", Chr([number( Number )])"
+			}
+		}
+	}
+
+	void stmt( Stmt: stmt )
+	{
+		switch Stmt
+		case [EH: embedded_host]
+		{
+			<<	[embedded_host( EH )]
+		}
+		case [A: static_array] {
+			Length: int = 0
+			for Number: number in A.num_list
+				Length = Length + 1
+
+			High: int = Length - 1
+
+			<<	"const [A.ident]: array\[0..[High]\] of [type(A.type)] = ( "
+			if match A.type ["char"] {
+				<<	"[num_list_char(A.num_list)]"
+			}
+			else {
+				<<	"[num_list(A.num_list)]"
+			}
+			<<	" );
+		}
+		case [V: static_value] {
+			<<	"const [V.ident]: [type(V.type)] = [V.number];
+		}
+		case [
+				`if `( IfExpr: expr `)
+					IfStmt: stmt
+				ElseIfClauseList: else_if_clause*
+				ElseClauseOpt: else_clause?
+		] {
+			<<	"if [expr(IfExpr)] then
+				"begin
+				"	[stmt(IfStmt)]
+				"end
+				"
+
+			for ElseIfClause: else_if_clause in repeat( ElseIfClauseList ) {
+				match ElseIfClause
+					[`else `if `( ElseIfExpr: expr `) ElseIfStmt: stmt]
+
+				<<	"else if [expr(ElseIfExpr)] then
+					"begin
+					"	[stmt(ElseIfStmt)]
+					"end
+					"
+			}
+
+			if ( match ElseClauseOpt ['else' ElseStmt: stmt] ) {
+				<<	"else
+					"begin
+					"	[stmt(ElseStmt)]
+					"end
+					"
+			}
+			<<	";
+		}
+		case [`while `( WhileExpr: expr `) WhileStmt: stmt] {
+			<<	"while [expr(WhileExpr)] do
+				"	[stmt(WhileStmt)]
+		}
+		case [M: match_stmt] {
+			<<	"case [expr(M.E)] of
+
+			for PB: pat_block in repeat( M.P ) {
+				<<	"[expr( PB.expr )]:
+					"[stmt_list( PB._repeat_stmt )]
+			}
+
+			if match M.D [D: default_block] {
+				<<	"else
+					"[stmt_list( D._repeat_stmt )]
+			}
+
+			<<	"end;
+		}
+		case [`switch `( SwitchExpr: expr `) `{ StmtList: stmt* `}] {
+			<<	"case [expr(SwitchExpr)] of
+				"	[switch_body( StmtList )]
+				"end;
+		}
+		case [ES: expr_stmt] {
+			<<	"[expr(ES.expr)];
+		}
+		case [B: block] {
+			<<	"begin
+				"	[stmt_list(B.StmtList)]
+				"end;
+		}
+		case [
+			OptConst: opt_const Type: type 
+			Ident: ident OptInit: opt_init Semi: `;
+		]
+		{
+			if match OptConst [`const] {
+				<<	"const [Ident]: [type(Type)]"
+				if match OptInit [`= Init: expr] {
+					<<	" = [expr(Init)]"
+				}
+				<<	";"
+			}
+			else {
+				# The var declaration is hoisted by the pre-scan (collect_vars);
+				# here we only emit the initializer assignment.
+				if match OptInit [`= Init: expr] {
+					<<	"[Ident] := [expr(Init)];"
+				}
+			}
+		}
+		case [Export: export_stmt]
+		{
+			<<	"const [Export.ident] = [number(Export.number)];
+		}
+		case [fallthrough]
+		{
+			# Pascal case has no fallthrough; emit nothing.
+		}
+		case [Index: index_stmt]
+		{
+			# The var declaration is hoisted by the pre-scan (collect_vars);
+			# here we only emit the initializer assignment.
+			if match Index.opt_init [`= expr] {
+				<<	"[Index.ident] := [expr(Index.opt_init.expr)];"
+			}
+		}
+		case [GL: goto_label]
+		{
+			<<	"[GL.ident]:"
+		}
+		case [GS: goto_stmt]
+		{
+			<<	"goto [GS.ident];
+		}
+		case [break_stmt]
+		{
+			<<	"break;
+		}
+		case [continue_stmt]
+		{
+			<<	"continue;
+		}
+		case [CB: case_block]
+		{
+			<<	"[expr( CB.expr )]:
+				"[stmt_list( CB._repeat_stmt )]
+		}
+		case [DB: default_block]
+		{
+			<<	"else
+				"[stmt_list( DB._repeat_stmt )]
+		}
+		case [CL: case_label]
+		{
+			<<	"[expr( CL.expr )]:
+		}
+		case [AS: assign_stmt]
+		{
+			if match AS.assign_op [`=]
+				<<	"[lvalue(AS.LValue)] := [expr(AS.expr)];
+			else if match AS.assign_op [`+=]
+				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] + [expr(AS.expr)];
+			else if match AS.assign_op [`-=]
+				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] - [expr(AS.expr)];
+		}
+		default {
+			# catches unspecified cases
+			<<	[Stmt]
+		}
+	}
+
+	void stmt_list( StmtList: stmt* )
+	{
+		for Stmt: stmt in repeat( StmtList )
+			stmt( Stmt )
+	}
+
+	# Emit the body of a `switch` (Pascal `case ... of`). Each case label's
+	# body is wrapped in `begin ... end` so that a multi-statement body (e.g.
+	# a nested switch + if + goto, as produced by -G0/-G1) is a single Pascal
+	# statement, which the `case` grammar requires.
+	void switch_body( StmtList: stmt* )
+	{
+		InCase: bool = false
+		for Stmt: stmt in repeat( StmtList ) {
+			switch Stmt
+			case [CL: case_label]
+			{
+				if InCase
+					<<	"end;
+				<<	"[expr( CL.expr )]: begin
+				InCase = true
+			}
+			case [CB: case_block]
+			{
+				if InCase
+					<<	"end;
+				<<	"[expr( CB.expr )]: begin
+					"[stmt_list( CB._repeat_stmt )]
+				InCase = true
+			}
+			case [DB: default_block]
+			{
+				if InCase
+					<<	"end;
+				<<	"else begin
+					"[stmt_list( DB._repeat_stmt )]
+				InCase = true
+			}
+			default
+			{
+				stmt( Stmt )
+			}
+		}
+		if InCase
+			<<	"end;
+	}
+
+	# Pre-scan pass: collect all `declaration`/`index_stmt` nodes so they can
+	# be hoisted into a single `var` section (FPC requires var at procedure
+	# level, not inline). This runs BEFORE the emit pass so the var section
+	# can be placed before the first `begin`.
+	void collect_var_stmt( Stmt: stmt )
+	{
+		switch Stmt
+		case [D: declaration]
+		{
+			if !match D.opt_const [`const] {
+				# Deduplicate: only add if the name isn't already collected.
+				Dup: bool = false
+				for VD: var_decl in GblVars {
+					if VD->Ident == $D.ident {
+						Dup = true
+					}
+				}
+				if !Dup {
+					new VD: var_decl()
+					VD->Ident = $D.ident
+					VD->Type = D.type
+					GblVars->push_tail( VD )
+				}
+			}
+		}
+		case [I: index_stmt]
+		{
+			Dup: bool = false
+			for VD: var_decl in GblVars {
+				if VD->Ident == $I.ident {
+					Dup = true
+				}
+			}
+			if !Dup {
+				new VD: var_decl()
+				VD->Ident = $I.ident
+				VD->Type = I.type
+				VD->IsIndex = true
+				GblVars->push_tail( VD )
+			}
+		}
+		case [GL: goto_label]
+		{
+			Dup: bool = false
+			for L: str in GblLabels {
+				if L == $GL.ident {
+					Dup = true
+				}
+			}
+			if !Dup {
+				GblLabels->push_tail( $GL.ident )
+			}
+		}
+		case [B: block]
+		{
+			for S: stmt in repeat( B.StmtList )
+				collect_var_stmt( S )
+		}
+		case [M: match_stmt]
+		{
+			for PB: pat_block in repeat( M.P )
+				for S: stmt in repeat( PB._repeat_stmt )
+					collect_var_stmt( S )
+			if match M.D [D: default_block]
+				for S: stmt in repeat( D._repeat_stmt )
+					collect_var_stmt( S )
+		}
+		case [`switch `( SwitchExpr: expr `) `{ StmtList: stmt* `}]
+		{
+			for S: stmt in repeat( StmtList )
+				collect_var_stmt( S )
+		}
+		case [
+				`if `( IfExpr: expr `)
+					IfStmt: stmt
+				ElseIfClauseList: else_if_clause*
+				ElseClauseOpt: else_clause?
+		]
+		{
+			collect_var_stmt( IfStmt )
+			for ElseIfClause: else_if_clause in repeat( ElseIfClauseList ) {
+				match ElseIfClause
+					[`else `if `( ElseIfExpr: expr `) ElseIfStmt: stmt]
+				collect_var_stmt( ElseIfStmt )
+			}
+			if match ElseClauseOpt ['else' ElseStmt: stmt]
+				collect_var_stmt( ElseStmt )
+		}
+		case [`while `( WhileExpr: expr `) WhileStmt: stmt]
+		{
+			collect_var_stmt( WhileStmt )
+		}
+	}
+
+	void collect_vars( StmtList: stmt* )
+	{
+		for Stmt: stmt in repeat( StmtList )
+			collect_var_stmt( Stmt )
+	}
+
+	void trans( Output: stream, Start: start )
+	{
+		_ = new parser<pascal_out::pascal_out>()
+
+		if ( Start.opt_bom.bom )
+			send Output [Start.opt_bom.bom]
+
+		# FPC disables goto by default in objfpc mode; enable it for the
+		# state-machine dispatch emitted by GotoFeature.
+		send Output "{$goto on}\n"
+
+		# Pre-scan to collect the state-machine working variables.
+		collect_vars( Start._repeat_stmt )
+
+		stmt_list( Start._repeat_stmt )
+
+		PAS: pascal_out::pascal_out = _->finish()
+
+		if PAS {
+			send Output
+				[PAS]
+		}
+		else {
+			send stderr
+				"failed to parse output: [_->error]
+			exit(1)
+		}
+	}
+end
+
+void trans( Output: stream, Start: start )
+{
+	pascal_gen::trans( Output, Start )
+}
+
+include 'rlhc-main.lm'

@@ -1,0 +1,49 @@
+namespace out_pascal
+	token _IN_ /''/
+	token _EX_ /''/
+
+	lex
+		# Pascal comments: { }, (* *), and // line comments.
+		token comment /
+			'//' any* :> '\n' |
+			'{' any* :>> '}' |
+			'(*' any* :>> '*)'
+		/
+
+		token id
+			/[a-zA-Z_][a-zA-Z_0-9]*/
+
+		token number /
+			[0-9]+
+		/
+
+		token symbol /
+			'!' | '#' | '$' | '%' | '&' | '(' | ')' | '*' |
+			'+' | ',' | '-' | '.' | '/' | ':' | ';' | '<' |
+			'=' | '>' | '?' | '@' | '[' | ']' | '^' | '|' |
+			'~' /
+
+		literal `{ `}
+
+		# Pascal string literal: single-quoted, with '' as the escape for a
+		# single quote. Also admit double-quoted (some Pascal dialects).
+		token string /
+				"'" ( [^'] | "''" ) * "'" |
+				'"' ( [^"\\] | '\\' any ) * '"'
+			/
+
+		ignore
+			/[ \t\v\r\n]+/
+	end
+
+	def item
+		[comment]
+	|	[id]
+	|	[number]
+	|	[symbol]
+	|	[string]
+	|	[`{ _IN_ item* _EX_ `} ]
+
+	def out_pascal
+		[_IN_ _EX_ item*]
+end

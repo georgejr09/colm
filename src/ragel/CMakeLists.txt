@@ -129,7 +129,7 @@ endfunction()
 
 foreach(_subdir host-asm host-c host-crack host-csharp host-d host-go
 		host-java host-js host-julia host-ocaml host-ruby host-rust
-		host-zig)
+		host-zig host-pascal)
 	add_subdirectory(${_subdir})
 endforeach()
 

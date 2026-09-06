@@ -58,18 +58,24 @@ struct Concurrent
 	# Count characters.
 	chars = ( any @next_char )*;
 
-	# Words are non-whitespace. 
+	# Words are non-whitespace.
 	word = ( any-space )+ >start_word %end_word;
-	words = ( ( word | space ) $1 %0 )*;
 
-	# Finds C style comments. 
+	# Finds C style comments.
 	comment = ( '/*' any* :>> '*/' ) >start_comment %end_comment;
-	comments = ( comment | any )**;
 
-	# Finds single quoted strings. 
+	# Finds single quoted strings.
 	literalChar = ( any - ['\\] ) | ( '\\' . any );
 	literal = ('\'' literalChar* '\'' ) >start_literal %end_literal;
-	literals = ( ( literal | (any-'\'') ) $1 %0 )*;
+
+	# Concurrent scanners: each is a token pattern repeated with the
+	# longest-match kleene star (**), which prefers staying in the machine
+	# over wrapping around. The catch-all alternative (space / any) consumes
+	# the characters that are not part of the token, so the three scanners
+	# run concurrently over the same input.
+	words = ( word | space )**;
+	comments = ( comment | any )**;
+	literals = ( literal | (any-'\'') )**;
 
 	main := chars | words | comments | literals;
 }%%

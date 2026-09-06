@@ -1,6 +1,6 @@
 SUBDIRS = . host-ruby host-asm host-julia host-ocaml host-c \
 	host-d host-csharp host-go host-java host-rust host-crack host-js \
-	host-zig
+	host-zig host-pascal
 
 # Like libfsm, ragel takes nothing from configure. nostdinc drops automake's
 # implicit -I$(top_builddir)/src/colm so that an include of colm's config.h

@@ -1,0 +1,16 @@
+/.deps/
+/.libs/
+/Makefile
+/Makefile.in
+/ragel-pascal
+/ragel-pascal.exe
+/rlhc.c
+/rlparse.pack
+/rlparse.c
+/rlreduce.cc
+/rlparse.pack
+/*.obj
+/*.o
+
+/CMakeFiles
+/cmake_install.cmake

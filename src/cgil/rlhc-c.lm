@@ -265,9 +265,22 @@ namespace c_gen
 	void expr_test( ExprTest: expr_test )
 	{
 		switch ExprTest
-		case [expr_test Op: test_op expr_shift]
+		case [expr_test Op: logical_op R: expr_test]
 		{
-			<<	[expr_test( _expr_test ) Op expr_shift( expr_shift )]
+			<<	[expr_test( _expr_test ) ' ' Op ' ' expr_test( R )]
+		}
+		case [expr_cmp]
+		{
+			expr_cmp( expr_cmp )
+		}
+	}
+
+	void expr_cmp( ExprCmp: expr_cmp )
+	{
+		switch ExprCmp
+		case [expr_cmp Op: test_op expr_shift]
+		{
+			<<	[expr_cmp( _expr_cmp ) Op expr_shift( expr_shift )]
 		}
 		case [expr_shift]
 		{

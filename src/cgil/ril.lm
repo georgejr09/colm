@@ -136,10 +136,17 @@ def expr_shift
 
 def test_op
 	[`<] | [`>] | [`<=] | [`>=] |
-	[`==] | [`!=] | [`&&] | [`||]
+	[`==] | [`!=]
+
+def logical_op
+	[`&&] | [`||]
 
 def expr_test
-	[expr_test test_op expr_shift]
+	[expr_test logical_op expr_test]
+|	[expr_cmp]
+
+def expr_cmp
+	[expr_cmp test_op expr_shift]
 |	[expr_shift]
 
 def expr

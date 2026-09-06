@@ -263,6 +263,7 @@ AC_ARG_WITH(subject,
 		SUBJ_RAGEL_ZIG_BIN='$(abs_top_builddir)/src/ragel/host-zig/ragel-zig'
 		SUBJ_RAGEL_CRACK_BIN='$(abs_top_builddir)/src/ragel/host-crack/ragel-crack'
 		SUBJ_RAGEL_JULIA_BIN='$(abs_top_builddir)/src/ragel/host-julia/ragel-julia'
+		SUBJ_RAGEL_PASCAL_BIN='$(abs_top_builddir)/src/ragel/host-pascal/ragel-pascal'
 	]
 )
 
@@ -569,6 +570,7 @@ AC_CONFIG_FILES([
 	src/ragel/host-ruby/Makefile
 	src/ragel/host-rust/Makefile
 	src/ragel/host-zig/Makefile
+	src/ragel/host-pascal/Makefile
 ])
 AC_OUTPUT
 
