@@ -20,15 +20,16 @@ uses
 
 function Parse(const data: string): string;
 var
-  cs, p, pe, eof: integer;
+  cs: integer;
+  p, pe, eof: PChar;
   top: integer;
   stack: array[0..31] of integer;
   comm: char;
   res: string;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
+  p := PChar(data);
+  pe := p + Length(data);
   eof := pe;
   top := 0;
   comm := #0;

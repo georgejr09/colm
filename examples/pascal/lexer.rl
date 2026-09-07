@@ -22,17 +22,18 @@ type
 
 function Lex(const data: string): string;
 var
-  cs, p, pe, eof: integer;
-  ts, te: integer;
+  cs: integer;
+  p, pe, eof: PChar;
+  ts, te: PChar;
   act: integer;
   kind: TTokenKind;
   res: string;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
-  ts := 0;
-  te := 0;
+  p := PChar(data);
+  pe := p + Length(data);
+  ts := nil;
+  te := nil;
   act := 0;
   res := '';
 

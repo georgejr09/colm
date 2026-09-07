@@ -19,15 +19,16 @@ uses
 
 function Run(const data: string): string;
 var
-  cs, p, pe, eof: integer;
+  cs: integer;
+  p, pe, eof: PChar;
   top: integer;
   stack: array[0..31] of integer;
   acc: integer;
   res: string;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
+  p := PChar(data);
+  pe := p + Length(data);
   eof := pe;
   top := 0;
   acc := 0;

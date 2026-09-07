@@ -237,9 +237,27 @@ namespace pascal_gen
 	# Char in arithmetic (`Char - Char` is a type error), so in an arithmetic
 	# operand the deref is wrapped in `Ord(...)` (Byte); as a bare value it is
 	# emitted as `base[expr]` (Char) so `comm := fc` assigns a Char.
+	#
+	# PChar optimization: when the host declares the buffer pointer as `PChar`
+	# (e.g. `p, pe: PChar`), the data-buffer deref `deref(data, p)` is emitted
+	# as `p^` (pointer deref, no bounds computation) instead of `data[p]`
+	# (string index). Table derefs (`deref(_atoi_*, ...)`) stay `table[index]`.
 	void deref_emit( Base: expr, Index: expr, InArith: bool )
 	{
-		if InArith {
+		IsData: bool = false
+		if match Base [I: ident] && trim_ws( $I ) == "data" {
+			IsData = true
+		}
+		if IsData {
+			# data-buffer deref: `p^` (the PChar pointer dereferenced)
+			if InArith {
+				<<	"Ord([expr( Index, false )]^)"
+			}
+			else {
+				<<	"[expr( Index, false )]^"
+			}
+		}
+		else if InArith {
 			<<	"Ord([expr( Base, false )]\[[expr( Index, false )]\])"
 		}
 		else {

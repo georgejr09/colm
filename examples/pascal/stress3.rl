@@ -18,13 +18,14 @@ uses
 
 function Run(const data: string): string;
 var
-  cs, p, pe, eof: integer;
+  cs: integer;
+  p, pe, eof: PChar;
   acc: integer;
   res: string;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
+  p := PChar(data);
+  pe := p + Length(data);
   eof := pe;
   acc := 0;
   res := '';

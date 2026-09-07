@@ -20,7 +20,8 @@ uses
 
 function Scan(const data: string): string;
 var
-  cs, p, pe, eof: integer;
+  cs: integer;
+  p, pe, eof: PChar;
   val: double;
   frac: double;
   frac_digits: integer;
@@ -30,8 +31,8 @@ var
   res: string;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
+  p := PChar(data);
+  pe := p + Length(data);
   eof := pe;
   val := 0.0;
   frac := 0.0;

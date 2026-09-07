@@ -17,12 +17,13 @@ uses
 
 function Run(const data: string): string;
 var
-  cs, p, pe: integer;
+  cs: integer;
+  p, pe: PChar;
   acc: integer;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
+  p := PChar(data);
+  pe := p + Length(data);
   acc := 0;
 
   %%{

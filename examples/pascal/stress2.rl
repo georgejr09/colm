@@ -17,17 +17,18 @@ uses
 
 function Run(const data: string): string;
 var
-  cs, p, pe, eof: integer;
-  ts, te: integer;
+  cs: integer;
+  p, pe, eof: PChar;
+  ts, te: PChar;
   act: integer;
   res: string;
 begin
   cs := 0;
-  p := 1;
-  pe := Length(data) + 1;
+  p := PChar(data);
+  pe := p + Length(data);
   eof := pe;
-  ts := 0;
-  te := 0;
+  ts := nil;
+  te := nil;
   act := 0;
   res := '';
 
