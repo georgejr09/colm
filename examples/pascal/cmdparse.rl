@@ -8,7 +8,7 @@
 
 program cmdparse;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

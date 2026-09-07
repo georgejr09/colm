@@ -1,6 +1,6 @@
 // -*-pascal-*-
 //
-// COMPLEX STRESS TEST: fgoto, fcall, fret, fhold, fentry, fbreak — the full
+// COMPLEX STRESS TEST: fgoto, fcall, fret, fhold, fentry, fbreak ? the full
 // control-flow suite. Mirrors the gotocallret.rl semantics but in Pascal.
 //
 // Grammar:
@@ -12,7 +12,7 @@
 
 program ctlflow;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

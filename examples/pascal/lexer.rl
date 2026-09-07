@@ -7,7 +7,7 @@
 
 program lexer;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

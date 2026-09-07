@@ -1,13 +1,13 @@
 // -*-pascal-*-
 //
 // COMPLEX TEST: exercises fgoto, fentry (multiple entry points), when
-// conditions, fbreak, and priorities — the constructs NOT covered by the
+// conditions, fbreak, and priorities ? the constructs NOT covered by the
 // existing examples.
 //
 
 program complex;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

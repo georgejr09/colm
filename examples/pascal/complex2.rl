@@ -1,7 +1,7 @@
 // -*-pascal-*-
 //
 // COMPLEX TEST 2: action-expansion stress. Exercises the FULL action-operator
-// set (>, $, %, <, @, ~, *) plus fnext and fexec — the constructs NOT covered
+// set (>, $, %, <, @, ~, *) plus fnext and fexec ? the constructs NOT covered
 // by the existing examples. Many DISTINCT actions force the -G1/-G2/-T1/-F1
 // "expanded actions" codegen to inline each action into the dispatch.
 //
@@ -12,7 +12,7 @@
 
 program complex2;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

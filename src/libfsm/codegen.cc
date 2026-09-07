@@ -1035,7 +1035,7 @@ void CodeGen::writeInit()
 	out << "	{\n";
 
 	if ( !noCS )
-		out << "\t" << vCS() << " = " << CAST("int") << START() << ";\n";
+		out << "\t" << vCS() << " = " << START() << ";\n";
 
 	if ( redFsm->anyNfaStates() )
 		out << "\t" << "nfa_len = 0;\n";

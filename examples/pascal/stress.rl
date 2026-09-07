@@ -6,7 +6,7 @@
 
 program stress;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

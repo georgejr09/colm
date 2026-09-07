@@ -5,7 +5,7 @@
 
 program fgototest;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

@@ -8,7 +8,7 @@
 
 program floatscan;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

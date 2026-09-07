@@ -5,7 +5,7 @@
 
 program atoi;
 
-{$mode objfpc}
+{$MODE DELPHI}
 
 uses
   SysUtils;

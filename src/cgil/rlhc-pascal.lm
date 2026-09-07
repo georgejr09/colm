@@ -63,6 +63,38 @@ namespace pascal_gen
 	global GblLabels: list<str> = new list<str>()
 	global GblHostBuf: str = ""
 
+	# Strip trailing whitespace from a string. Colm's `ignore` rule attaches
+	# the following whitespace to a token, so `[ident]` emits `name ` (with a
+	# trailing space). Pascal is whitespace-sensitive around operators, so we
+	# trim it here. (C tolerates it; Pascal shows it as `cs  :=`.)
+	str trim_ws( S: str )
+	{
+		Len: int = S.length
+		while ( Len > 0 ) {
+			C: str = suffix( S, Len - 1 )
+			if C == " " || C == "\t" || C == "\n" || C == "\r" {
+				Len = Len - 1
+			}
+			else {
+				break
+			}
+		}
+		return prefix( S, Len )
+	}
+
+	# Normalize a goto label name: strip a leading `_` (the IR emits `_st0`,
+	# `_ctr3`, `_out1`; Arnaud's mORMot2 uses readable `label zero;` names)
+	# and trailing whitespace. Must be applied at BOTH the label declaration
+	# and every `goto` site, or the label won't resolve.
+	str label_name( S: str )
+	{
+		T: str = trim_ws( S )
+		if T.length > 0 && prefix( T, 1 ) == "_" {
+			return suffix( T, 1 )
+		}
+		return T
+	}
+
 	void tok_list( TL: host::tok* )
 	{
 		Prev: str = ""
@@ -222,6 +254,10 @@ namespace pascal_gen
 		{
 			<<	[embedded_host( EH )]
 		}
+		case [I: ident]
+		{
+			<<	[trim_ws( $I )]
+		}
 		case Paren
 		{
 			<<	"([expr( expr, InArith )])"
@@ -282,6 +318,10 @@ namespace pascal_gen
 		{
 			<<	[embedded_host( EH )]
 		}
+		case [I: ident]
+		{
+			<<	[trim_ws( $I )]
+		}
 		case [LV: lvalue O: `[ TL: expr C: `]]
 		{
 			<<	[lvalue(LV) O expr( TL, false ) C]
@@ -314,7 +354,9 @@ namespace pascal_gen
 		}
 		case [`cast `( T: type `) F: expr_factor_op]
 		{
-			<<	"[type( T )]( [expr_factor_op( F, InArith )] )"
+			# Idiomatic: no space between the cast and the expression
+			# (`integer(x)`, not `integer( x )`).
+			<<	"[type( T )]([expr_factor_op( F, InArith )])"
 		}
 		case [expr_factor]
 		{
@@ -340,7 +382,9 @@ namespace pascal_gen
 		switch ExprMult
 		case [expr_mult T: `* expr_bitwise]
 		{
-			<<	[expr_mult( _expr_mult, true ) T expr_bitwise( expr_bitwise, true )]
+			# The `*` token carries a trailing space (ril.lm literal); strip it
+			# and emit a single space on each side for idiomatic spacing.
+			<<	[expr_mult( _expr_mult, true ) ' ' prefix( $T, 1 ) ' ' expr_bitwise( expr_bitwise, true )]
 		}
 		case [expr_bitwise]
 		{
@@ -353,7 +397,9 @@ namespace pascal_gen
 		switch ExprAdd
 		case [expr_add Op: add_op expr_mult]
 		{
-			<<	[expr_add( _expr_add, true ) Op expr_mult( expr_mult, true )]
+			# The add_op token (`+`/`-`) carries a trailing space (ril.lm
+			# literal); strip it and emit a single space on each side.
+			<<	[expr_add( _expr_add, true ) ' ' prefix( $Op, 1 ) ' ' expr_mult( expr_mult, true )]
 		}
 		case [expr_mult]
 		{
@@ -535,7 +581,9 @@ namespace pascal_gen
 			<<	" );
 		}
 		case [V: static_value] {
-			<<	"const [V.ident]: [type(V.type)] = [V.number];
+			# Idiomatic: untyped scalar constant (`const x = 1`), not the
+			# redundant `const x : integer = 1`. Arrays keep their type.
+			<<	"const [trim_ws( $V.ident )] = [V.number];
 		}
 		case [
 				`if `( IfExpr: expr `)
@@ -612,7 +660,8 @@ namespace pascal_gen
 		]
 		{
 			if match OptConst [`const] {
-				<<	"const [Ident]: [type(Type)]"
+				# Idiomatic: untyped scalar constant (`const x = 1`).
+				<<	"const [trim_ws( $Ident )]"
 				if match OptInit [`= Init: expr] {
 					<<	" = [expr(Init, false)]"
 				}
@@ -622,7 +671,7 @@ namespace pascal_gen
 				# The var declaration is hoisted by the pre-scan (collect_vars);
 				# here we only emit the initializer assignment.
 				if match OptInit [`= Init: expr] {
-					<<	"[Ident] := [expr(Init, false)];"
+					<<	"[trim_ws( $Ident )] := [expr(Init, false)];"
 				}
 			}
 		}
@@ -644,11 +693,11 @@ namespace pascal_gen
 		}
 		case [GL: goto_label]
 		{
-			<<	"[GL.ident]:"
+			<<	"[label_name( $GL.ident )]:"
 		}
 		case [GS: goto_stmt]
 		{
-			<<	"goto [GS.ident];
+			<<	"goto [label_name( $GS.ident )];
 		}
 		case [break_stmt]
 		{
@@ -677,9 +726,21 @@ namespace pascal_gen
 			if match AS.assign_op [`=]
 				<<	"[lvalue(AS.LValue)] := [expr(AS.expr, false)];
 			else if match AS.assign_op [`+=]
-				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] + [expr(AS.expr, false)];
+				# Idiomatic: `x += 1` -> `Inc(x)`; `x += e` -> `Inc(x, e)`
+				# (FPC compiler procedures, faster than `x := x + e`).
+				if match AS.expr [N: number] && match N [U: uint] && $U == "1" {
+					<<	"Inc([lvalue(AS.LValue)]);
+				}
+				else {
+					<<	"Inc([lvalue(AS.LValue)], [expr(AS.expr, false)]);
+				}
 			else if match AS.assign_op [`-=]
-				<<	"[lvalue(AS.LValue)] := [lvalue(AS.LValue)] - [expr(AS.expr, false)];
+				if match AS.expr [N: number] && match N [U: uint] && $U == "1" {
+					<<	"Dec([lvalue(AS.LValue)]);
+				}
+				else {
+					<<	"Dec([lvalue(AS.LValue)], [expr(AS.expr, false)]);
+				}
 		}
 		default {
 			# catches unspecified cases
@@ -779,12 +840,12 @@ namespace pascal_gen
 		{
 			Dup: bool = false
 			for L: str in GblLabels {
-				if L == $GL.ident {
+				if L == label_name( $GL.ident ) {
 					Dup = true
 				}
 			}
 			if !Dup {
-				GblLabels->push_tail( $GL.ident )
+				GblLabels->push_tail( label_name( $GL.ident ) )
 			}
 		}
 		case [B: block]
@@ -842,7 +903,8 @@ namespace pascal_gen
 			send Output [Start.opt_bom.bom]
 
 		# FPC disables goto by default in objfpc mode; enable it for the
-		# state-machine dispatch emitted by GotoFeature.
+		# state-machine dispatch emitted by GotoFeature. (Host files now use
+		# {$MODE DELPHI}, where goto is on by default — kept for safety.)
 		send Output "{$goto on}\n"
 
 		# Speed directives (Interpretation 1): disable range-checking on the
