@@ -205,10 +205,23 @@ if(COLM_BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()
 
-# dist_doc_DATA in Makefile.am
-if(COLM_INSTALL_COLM)
-	install(FILES colm.vim
-		DESTINATION "${CMAKE_INSTALL_DOCDIR}")
+# ---------------------------------------------------------------------------
+# Structural-safety guard (Option 2): a CTest that scans src/libfsm/*.cc for a
+# raw C-style assignment (`ret << ... " = "`) leaked into ACTION()'s opaque
+# host-block without self-wrapping. This catches a future codegen function that
+# bypasses the type-safe emitGenAssign/emitRawAssign helpers. Runs automatically
+# via `ctest` (or `ninja test`).
+# ---------------------------------------------------------------------------
+enable_testing()
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+        add_test(
+                NAME ragel_pascal_guard
+                COMMAND ${Python3_EXECUTABLE}
+                        "${CMAKE_CURRENT_LIST_DIR}/../my-tests/ragel-pascal-guard.py"
+        )
+else()
+        message(WARNING "Python3 not found — ragel_pascal_guard test skipped")
 endif()
 
 if(COLM_INSTALL_RAGEL)

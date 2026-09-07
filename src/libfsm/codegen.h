@@ -55,6 +55,31 @@ struct LongestMatchPart;
 
 string itoa( int i );
 
+/* Type-level fix (Option 1): a DISTINCT stream type for structured IR.
+ *
+ * The raw-C-style-assignment bug is a TYPE CONFUSION between two output kinds:
+ *   - structured IR   (${...}$ gen-block)  → must be translated (C `=` → Pascal `:=`)
+ *   - opaque host text (host(...)${...}$)  → must be emitted verbatim
+ *
+ * Before this fix, BOTH kinds flowed through a single `ostream&`, so the
+ * compiler could not tell them apart — a codegen function could emit structured
+ * content (`cs = 1`) into an opaque host-text stream, and it compiled fine.
+ *
+ * `GenStream` is a DISTINCT type that wraps an `ostream&`. Structured emitters
+ * (GOTO/NEXT/CALL/RET/BREAK/Hold/NfaClear/Exec/emitGenAssign) take `GenStream&`,
+ * NOT `ostream&`. To pass a raw stream to a structured emitter you must
+ * EXPLICITLY construct a `GenStream` — a deliberate, visible act. A raw
+ * `ostream&` (host text) can no longer be silently passed to a structured
+ * emitter: the compiler rejects the type mismatch.
+ *
+ * The constructor is EXPLICIT (not implicit), so the distinction is enforced:
+ * you cannot accidentally treat a host-text stream as a structured stream. */
+struct GenStream
+{
+	explicit GenStream( ostream &os ) : os(os) {}
+	ostream &os;
+};
+
 struct Variable
 {
 	Variable( const char *name ) : name(name), isReferenced(false) {}
@@ -329,6 +354,44 @@ protected:
 
 	string CLOSE_GEN_BLOCK()
 		{ return backend == Direct ? "}" : "}$"; }
+
+	/* Type-safe codegen assignment (Fix C — the permanent fix).
+	 *
+	 * Emits `lhs = rhs;` ALWAYS self-wrapped in a gen-block, so the C-style
+	 * `=` is translated to Pascal `:=` even when called from inside
+	 * ACTION()'s opaque host-block. This is the ONLY sanctioned way to emit a
+	 * codegen assignment reachable from ACTION(); a raw
+	 * `ret << X << " = " << Y` is a bug (it leaks C-style `=` into the
+	 * host-block and is emitted verbatim by rlhc-pascal.lm).
+	 *
+	 * Takes a `GenStream&` (NOT `ostream&`) — the type-level fix. A raw
+	 * `ostream&` (host text) cannot be passed here without an explicit
+	 * `GenStream(...)` wrap, so the compiler rejects the type confusion.
+	 *
+	 * NOTE: do NOT use this for emitters called from inside LM_SWITCH()'s
+	 * gen-block (LmHold, SET_ACT, SET_TOKEND, INIT_ACT, INIT_TOKSTART,
+	 * SET_TOKSTART, LM_EXEC) — those are already inside a gen-block and would
+	 * nest. */
+	void emitGenAssign( const GenStream &ret, const string &lhs, const string &rhs )
+	{
+		ret.os << OPEN_GEN_BLOCK() << lhs << " = " << rhs << ";" << CLOSE_GEN_BLOCK();
+	}
+
+	/* Type-safe RAW codegen assignment (no self-wrap).
+	 *
+	 * For emitters called from INSIDE LM_SWITCH()'s gen-block (LmHold, SET_ACT,
+	 * SET_TOKEND, INIT_ACT, INIT_TOKSTART, SET_TOKSTART, LM_EXEC, BREAK, NBREAK).
+	 * These are already inside a gen-block, so they must NOT self-wrap (they'd
+	 * nest). But they still take a `GenStream&` (NOT `ostream&`), so a raw
+	 * host-text stream cannot be passed here — the type distinction is complete.
+	 *
+	 * This is the type-level fix applied to the LM_SWITCH()-internal emitters:
+	 * they emit raw C-style `=` but are type-distinct from host text, so the
+	 * compiler rejects any attempt to emit them into an opaque host-text stream. */
+	void emitRawAssign( const GenStream &ret, const string &lhs, const string &rhs )
+	{
+		ret.os << lhs << " = " << rhs << ";";
+	}
 
 	string OPEN_GEN_PLAIN()
 		{ return backend == Direct ? "" : "@{"; }

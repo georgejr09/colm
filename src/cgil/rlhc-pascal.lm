@@ -845,6 +845,13 @@ namespace pascal_gen
 		# state-machine dispatch emitted by GotoFeature.
 		send Output "{$goto on}\n"
 
+		# Speed directives (Interpretation 1): disable range-checking on the
+		# hot `data[p]` deref (FPC's default range-check is the main perf gap
+		# vs C) and enable inlining. Both are safe — they do NOT change the
+		# host-code contract (unlike switching to PChar, which is deferred).
+		send Output "{$R-}\n"
+		send Output "{$inline on}\n"
+
 		# Pre-scan to collect the state-machine working variables.
 		collect_vars( Start._repeat_stmt )
 

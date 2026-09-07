@@ -665,7 +665,7 @@ void Goto::TARGS( ostream &ret, bool inFinish, int targState )
 
 void Goto::NEXT( ostream &ret, int nextDest, bool inFinish )
 {
-	ret << OPEN_GEN_BLOCK() << vCS() << " = " << nextDest << ";" << CLOSE_GEN_BLOCK();
+	emitGenAssign( GenStream(ret), vCS(), STR(nextDest) );
 }
 
 void Goto::NEXT_EXPR( ostream &ret, GenInlineItem *ilItem, bool inFinish )

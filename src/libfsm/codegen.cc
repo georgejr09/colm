@@ -649,16 +649,16 @@ void CodeGen::LM_EXEC( ostream &ret, GenInlineItem *item, int targState, int inF
 
 void CodeGen::SET_ACT( ostream &ret, GenInlineItem *item )
 {
-	ret << ACT() << " = " << item->lmId << ";";
+	emitRawAssign( GenStream(ret), ACT(), STR(item->lmId) );
 }
 
 void CodeGen::SET_TOKEND( ostream &ret, GenInlineItem *item )
 {
 	/* The tokend action sets tokend. */
-	ret << TOKEND() << " = " << P();
-	if ( item->offset != 0 ) 
-		out << "+" << item->offset;
-	out << ";";
+	string rhs = P();
+	if ( item->offset != 0 )
+		rhs += "+" + STR(item->offset);
+	emitRawAssign( GenStream(ret), TOKEND(), rhs );
 }
 
 void CodeGen::GET_TOKEND( ostream &ret, GenInlineItem *item )
@@ -668,17 +668,17 @@ void CodeGen::GET_TOKEND( ostream &ret, GenInlineItem *item )
 
 void CodeGen::INIT_TOKSTART( ostream &ret, GenInlineItem *item )
 {
-	ret << TOKSTART() << " = " << NIL() << ";";
+	emitRawAssign( GenStream(ret), TOKSTART(), NIL() );
 }
 
 void CodeGen::INIT_ACT( ostream &ret, GenInlineItem *item )
 {
-	ret << ACT() << " = 0;";
+	emitRawAssign( GenStream(ret), ACT(), "0" );
 }
 
 void CodeGen::SET_TOKSTART( ostream &ret, GenInlineItem *item )
 {
-	ret << TOKSTART() << " = " << P() << ";";
+	emitRawAssign( GenStream(ret), TOKSTART(), P() );
 }
 
 void CodeGen::HOST_STMT( ostream &ret, GenInlineItem *item, 
@@ -804,13 +804,13 @@ void CodeGen::INLINE_LIST( ostream &ret, GenInlineList *inlineList,
 			ret << OPEN_GEN_EXPR() << GET_KEY() << CLOSE_GEN_EXPR();
 			break;
 		case GenInlineItem::Hold:
-			ret << OPEN_GEN_BLOCK() << P() << " = " << P() << " - 1; " << CLOSE_GEN_BLOCK();
+			emitGenAssign( GenStream(ret), P(), P() + " - 1" );
 			break;
 		case GenInlineItem::LmHold:
-			ret << P() << " = " << P() << " - 1;";
+			emitRawAssign( GenStream(ret), P(), P() + " - 1" );
 			break;
 		case GenInlineItem::NfaClear:
-			ret << OPEN_GEN_BLOCK() << "nfa_len = 0; " << CLOSE_GEN_BLOCK();
+			emitGenAssign( GenStream(ret), "nfa_len", "0" );
 			break;
 		case GenInlineItem::Exec:
 			EXEC( ret, item, targState, inFinish );
